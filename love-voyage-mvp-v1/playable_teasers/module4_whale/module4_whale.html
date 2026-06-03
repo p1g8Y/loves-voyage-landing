@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>愛之航 · 小鯨魚陪伴</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600&family=Playfair+Display:ital,wght@0,600;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #1a4a6a;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+  font-family: 'Noto Serif TC', serif;
+}
+
+/* ── Phone Frame ── */
+#phone {
+  position: relative;
+  width: min(390px, 100vw);
+  height: min(844px, 100vh);
+  border-radius: 40px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0,0,0,.5), 0 0 0 1.5px rgba(140,220,255,.2);
+}
+
+/* ── Ocean BG ── */
+#bg {
+  position: absolute; inset: 0;
+  background: url('./assets/bg_ocean.png') center/cover no-repeat;
+  transform: scale(1.08);
+  filter: brightness(.82) saturate(1.15);
+}
+/* Light airy overlay — bright sky to light sea */
+#bg-overlay {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg,
+      rgba(160,220,255,.18) 0%,
+      rgba(60,150,210,.22) 40%,
+      rgba(20,90,160,.38)  75%,
+      rgba(10,55,120,.55)  100%
+    );
+}
+/* Sunlight sparkle at top */
+#sun-glow {
+  position: absolute;
+  top: -30px; left: 50%;
+  transform: translateX(-50%);
+  width: 340px; height: 220px;
+  background: radial-gradient(ellipse, rgba(255,240,180,.28) 0%, transparent 68%);
+  pointer-events: none;
+}
+
+/* ══ Bubbles ══ */
+.bubble {
+  position: absolute; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.6), rgba(160,230,255,.2));
+  border: 1px solid rgba(200,240,255,.45);
+  pointer-events: none;
+  animation: bubbleRise var(--dur) ease-in var(--delay) infinite;
+}
+@keyframes bubbleRise {
+  0%   { transform: translateY(0) translateX(0); opacity: 0; }
+  12%  { opacity: .75; }
+  85%  { opacity: .45; }
+  100% { transform: translateY(-110px) translateX(var(--drift)); opacity: 0; }
+}
+
+/* ══ Wave bottom ══ */
+#wave-bottom {
+  position: absolute; bottom: 0; left: -5%; right: -5%;
+  height: 60px; pointer-events: none; z-index: 1;
+}
+#wave-bottom svg { width: 110%; height: 100%; }
+
+/* ══════════════════════════════
+   MAIN SCREEN
+══════════════════════════════ */
+#main-screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  padding: 0 14px 80px;
+  z-index: 5;
+}
+
+/* ── Hero ── */
+#hero {
+  display: flex; align-items: center;
+  gap: 12px; padding: 18px 4px 6px;
+  flex-shrink: 0;
+}
+#whale-img {
+  width: 72px; height: 72px; object-fit: contain;
+  filter: drop-shadow(0 4px 16px rgba(80,200,255,.55));
+  animation: whaleFloat 3.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes whaleFloat {
+  0%,100% { transform: translateY(0) rotate(-2deg); }
+  50%      { transform: translateY(-8px) rotate(2deg); }
+}
+#hero-text h1 {
+  font-family: 'Playfair Display', serif; font-style: italic;
+  font-size: 1.25rem; color: #fff;
+  text-shadow: 0 2px 14px rgba(80,200,255,.5), 0 1px 3px rgba(0,0,0,.25);
+  letter-spacing: .07em; line-height: 1.2;
+}
+#hero-text p {
+  font-size: .58rem; color: rgba(200,240,255,.55);
+  letter-spacing: .25em; margin-top: 2px;
+}
+
+/* ── Speech Bubble ── */
+#speech-bubble {
+  background: rgba(255,255,255,.22);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,.5);
+  border-radius: 0 14px 14px 14px;
+  padding: 8px 14px; font-size: .74rem;
+  color: rgba(255,255,255,.92); line-height: 1.58;
+  transition: opacity .4s, transform .4s;
+  height: 3.6rem; min-height: 3.6rem; max-height: 3.6rem;
+  overflow: hidden;
+  display: flex; align-items: flex-start;
+  box-shadow: 0 4px 16px rgba(0,60,120,.15), inset 0 1px rgba(255,255,255,.3);
+  flex-shrink: 0;
+}
+
+/* ── Divider ── */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.28), transparent);
+  margin: 9px 0 5px; flex-shrink: 0;
+}
+.section-label {
+  font-size: .58rem; color: rgba(200,240,255,.5);
+  letter-spacing: .25em; padding: 0 4px 7px; flex-shrink: 0;
+}
+
+/* ══════════════════════════════
+   CARD GRID LAYOUT
+══════════════════════════════ */
+#card-grid {
+  flex: 1; display: flex; flex-direction: column;
+  gap: 10px; min-height: 0;
+}
+
+/* Base card style */
+.ocean-card {
+  background: rgba(255,255,255,.18);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,.42);
+  border-radius: 20px;
+  box-shadow: 0 6px 22px rgba(0,50,110,.18), inset 0 1.5px rgba(255,255,255,.25);
+  overflow: hidden; position: relative;
+  transition: transform .18s, box-shadow .18s, background .18s;
+}
+.ocean-card:active {
+  transform: scale(.975);
+  background: rgba(255,255,255,.24);
+  box-shadow: 0 3px 12px rgba(0,50,110,.22);
+}
+
+/* ── Festival card (large, top) ── */
+#card-festival {
+  flex: 0.95;
+  cursor: pointer;
+  display: flex; flex-direction: column;
+  padding: 14px 16px 12px;
+}
+#card-festival .card-top {
+  display: flex; align-items: center;
+  justify-content: space-between; margin-bottom: 10px;
+}
+#card-festival .card-label {
+  display: flex; align-items: center; gap: 7px;
+  font-size: .84rem; font-weight: 600;
+  color: #fff; letter-spacing: .05em;
+  text-shadow: 0 1px 6px rgba(0,0,0,.2);
+}
+#card-festival .card-label .icon { font-size: 1.1rem; }
+#card-festival .see-more {
+  font-size: .64rem; color: rgba(255,255,255,.6);
+  letter-spacing: .06em; display: flex; align-items: center; gap: 3px;
+}
+
+/* Next event highlight */
+#next-event-banner {
+  background: linear-gradient(135deg, rgba(255,200,80,.28), rgba(255,150,80,.18));
+  border: 1px solid rgba(255,210,100,.4);
+  border-radius: 12px; padding: 8px 12px;
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 9px;
+  box-shadow: inset 0 1px rgba(255,240,180,.2);
+}
+#next-event-banner .countdown-big {
+  font-family: 'Playfair Display', serif; font-style: italic;
+  font-size: 1.9rem; color: #ffd98a; line-height: 1;
+  text-shadow: 0 0 18px rgba(255,200,80,.55), 0 2px 6px rgba(0,0,0,.3);
+  flex-shrink: 0;
+}
+#next-event-banner .countdown-unit {
+  font-size: .5rem; font-style: normal;
+  font-family: 'Noto Serif TC', serif;
+  color: rgba(255,210,100,.6); letter-spacing: .1em; display: block; margin-top: 2px;
+}
+#next-event-banner .next-info { flex: 1; }
+#next-event-banner .next-name { font-size: .82rem; color: #fff; font-weight: 600; }
+#next-event-banner .next-date { font-size: .64rem; color: rgba(255,255,255,.55); margin-top: 2px; }
+
+/* Mini festival list */
+.mini-festival-list { display: flex; flex-direction: column; gap: 6px; }
+.mini-festival-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 4px;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.mini-festival-item:last-child { border-bottom: none; }
+.mini-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 5px currentColor; }
+.mini-name { flex: 1; font-size: .74rem; color: rgba(255,255,255,.82); }
+.mini-date { font-size: .62rem; color: rgba(200,235,255,.45); }
+.mini-days {
+  font-size: .7rem; color: #90d8f0; font-weight: 600;
+  background: rgba(100,200,240,.18); border: 1px solid rgba(100,200,240,.25);
+  border-radius: 6px; padding: 2px 7px; letter-spacing: .03em;
+}
+
+/* ── Bottom two cards row ── */
+#card-bottom-row {
+  display: flex; gap: 10px; flex: 1; min-height: 0;
+}
+#card-gift, #card-qa {
+  flex: 1; cursor: pointer;
+  display: flex; flex-direction: column;
+  padding: 13px 13px 11px;
+  min-height: 0;
+}
+.small-card-header {
+  display: flex; align-items: center;
+  justify-content: space-between; margin-bottom: 8px;
+}
+.small-card-title {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .8rem; font-weight: 600;
+  color: #fff; letter-spacing: .04em;
+}
+.small-card-title .icon { font-size: 1rem; }
+.small-see-more { font-size: .62rem; color: rgba(255,255,255,.5); }
+
+/* Gift card preview */
+.gift-chips {
+  display: flex; flex-direction: column; gap: 5px; flex: 1;
+}
+.gift-chip {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+  border-radius: 10px; padding: 6px 9px;
+}
+.gift-chip .g-icon { font-size: 1rem; flex-shrink: 0; }
+.gift-chip .g-text { font-size: .7rem; color: rgba(255,255,255,.82); line-height: 1.3; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gift-chip .g-tag {
+  font-size: .58rem; color: #7de8d8;
+  background: rgba(80,220,200,.16); border: 1px solid rgba(80,220,200,.22);
+  border-radius: 99px; padding: 1px 6px; flex-shrink: 0; white-space: nowrap;
+}
+.gift-more {
+  font-size: .64rem; color: rgba(200,240,255,.45);
+  text-align: center; margin-top: 5px; letter-spacing: .04em;
+}
+
+/* Q&A card preview */
+.qa-preview-wrap { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.qa-preview-q {
+  font-size: .7rem; color: rgba(210,235,255,.72);
+  font-style: italic; line-height: 1.45;
+}
+.qa-preview-q::before { content: '❝ '; color: rgba(160,210,240,.5); }
+.qa-preview-answers { display: flex; flex-direction: column; gap: 4px; }
+.qa-preview-row { display: flex; align-items: flex-start; gap: 5px; }
+.qa-preview-avatar {
+  width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .52rem; flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,.25); color: #fff;
+}
+.qa-preview-avatar.me { background: linear-gradient(135deg, #4a8fd4, #3ac0d0); }
+.qa-preview-avatar.partner { background: linear-gradient(135deg, #d4608a, #e8906a); }
+.qa-preview-text {
+  font-size: .65rem; color: rgba(220,242,255,.7);
+  line-height: 1.4; flex: 1;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.qa-more {
+  font-size: .64rem; color: rgba(200,240,255,.45);
+  text-align: center; margin-top: auto; padding-top: 5px; letter-spacing: .04em;
+}
+
+/* ══════════════════════════════
+   BOTTOM SHEET
+══════════════════════════════ */
+.sheet-overlay {
+  position: absolute; inset: 0;
+  background: rgba(5,25,50,.55);
+  backdrop-filter: blur(5px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .35s; z-index: 10;
+}
+.sheet-overlay.open { opacity: 1; pointer-events: all; }
+
+.bottom-sheet {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(180deg, rgba(10,45,90,.97) 0%, rgba(5,25,60,.99) 100%);
+  border: 1px solid rgba(140,210,255,.22);
+  border-bottom: none; border-radius: 26px 26px 0 0;
+  max-height: 83%; display: flex; flex-direction: column;
+  transform: translateY(100%);
+  transition: transform .42s cubic-bezier(.32,.72,0,1);
+  z-index: 11;
+  box-shadow: 0 -10px 40px rgba(0,20,60,.45);
+}
+.bottom-sheet.open { transform: translateY(0); }
+.bottom-sheet::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0;
+  height: 1.5px; border-radius: 26px 26px 0 0;
+  background: linear-gradient(90deg, transparent, rgba(100,200,255,.45), rgba(160,230,255,.7), rgba(100,200,255,.45), transparent);
+}
+
+.sheet-handle {
+  width: 38px; height: 4px;
+  background: rgba(120,200,240,.3); border-radius: 2px;
+  margin: 13px auto 0; flex-shrink: 0;
+}
+.sheet-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 20px 11px; flex-shrink: 0;
+  border-bottom: 1px solid rgba(100,190,240,.12);
+}
+.sheet-header h2 {
+  font-size: .98rem; color: #d8f2ff;
+  letter-spacing: .07em; display: flex; align-items: center; gap: 8px;
+  text-shadow: 0 1px 8px rgba(60,180,240,.3);
+}
+.sheet-close {
+  width: 30px; height: 30px;
+  background: rgba(100,190,240,.14); border: 1px solid rgba(100,190,240,.24);
+  border-radius: 50%; color: rgba(140,210,250,.75); font-size: .82rem;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .2s;
+}
+.sheet-close:hover { background: rgba(100,190,240,.25); color: #fff; }
+
+.sheet-body {
+  overflow-y: auto; flex: 1;
+  padding: 16px 20px 34px;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.sheet-body::-webkit-scrollbar { display: none; }
+
+/* ─── Festival sheet ─── */
+.festival-banner {
+  background: linear-gradient(135deg, rgba(255,200,80,.2), rgba(255,140,80,.14));
+  border: 1px solid rgba(255,210,100,.32);
+  border-radius: 18px; padding: 20px 16px;
+  text-align: center; margin-bottom: 16px;
+  box-shadow: 0 6px 20px rgba(0,30,80,.2), inset 0 1px rgba(255,240,180,.1);
+}
+.festival-banner .countdown {
+  font-size: 3.2rem; font-weight: 700; color: #ffd98a;
+  text-shadow: 0 0 30px rgba(255,200,80,.55), 0 2px 8px rgba(0,0,0,.4);
+  font-family: 'Playfair Display', serif; font-style: italic;
+  line-height: 1; margin-bottom: 6px;
+}
+.festival-banner .festival-name { font-size: .84rem; color: rgba(255,255,255,.88); letter-spacing: .15em; margin-bottom: 4px; }
+.festival-banner .festival-date { font-size: .66rem; color: rgba(200,235,255,.45); }
+
+.upcoming-list { display: flex; flex-direction: column; gap: 10px; }
+.upcoming-item {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+  border-radius: 14px; padding: 12px 14px;
+}
+.upcoming-item .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 7px currentColor; }
+.upcoming-item .info { flex: 1; }
+.upcoming-item .info .name { font-size: .82rem; color: rgba(240,250,255,.9); }
+.upcoming-item .info .date { font-size: .67rem; color: rgba(170,220,240,.4); margin-top: 3px; }
+.upcoming-item .days {
+  font-size: .8rem; color: #7dcce8; font-weight: 600;
+  background: rgba(80,190,230,.16); border: 1px solid rgba(80,190,230,.25);
+  border-radius: 8px; padding: 4px 10px;
+}
+
+/* ─── Gift sheet ─── */
+.gift-context { font-size: .71rem; color: rgba(160,220,240,.45); letter-spacing: .07em; margin-bottom: 14px; text-align: center; }
+.gift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.gift-card {
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+  border-radius: 16px; padding: 14px 12px;
+  display: flex; flex-direction: column; gap: 6px;
+  cursor: pointer; transition: transform .2s, background .2s;
+}
+.gift-card:hover, .gift-card:active { background: rgba(255,255,255,.17); transform: translateY(-2px); }
+.gift-card .gift-icon { font-size: 1.6rem; }
+.gift-card .gift-title { font-size: .77rem; color: rgba(230,248,255,.88); letter-spacing: .04em; line-height: 1.35; }
+.gift-card .gift-tag {
+  font-size: .61rem; color: #7de8d8;
+  background: rgba(80,220,200,.16); border: 1px solid rgba(80,220,200,.22);
+  border-radius: 99px; padding: 2px 8px; display: inline-block; width: fit-content;
+}
+
+/* ─── Q&A sheet ─── */
+.qa-item { border-bottom: 1px solid rgba(255,255,255,.08); padding: 14px 0; }
+.qa-item:last-child { border-bottom: none; }
+.qa-date { font-size: .62rem; color: rgba(120,200,235,.4); letter-spacing: .12em; margin-bottom: 6px; }
+.qa-question { font-size: .79rem; color: rgba(190,225,255,.78); margin-bottom: 10px; line-height: 1.6; font-style: italic; }
+.qa-question::before { content: '❝ '; color: rgba(120,200,240,.5); }
+.qa-answers { display: flex; flex-direction: column; gap: 7px; }
+.qa-answer { display: flex; gap: 9px; align-items: flex-start; }
+.qa-avatar {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, #4a8fd4, #3ac0d0);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .68rem; flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,.25); color: rgba(255,255,255,.95);
+  box-shadow: 0 2px 8px rgba(40,130,220,.3);
+}
+.qa-avatar.partner { background: linear-gradient(135deg, #d4608a, #e8906a); box-shadow: 0 2px 8px rgba(200,80,120,.25); }
+.qa-text {
+  background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.15);
+  border-radius: 10px 10px 10px 0; padding: 8px 12px;
+  font-size: .75rem; color: rgba(220,245,255,.8); line-height: 1.6; flex: 1;
+}
+.qa-answer:nth-child(2) .qa-text { border-radius: 10px 10px 0 10px; }
+.like-btn {
+  background: transparent; border: none;
+  color: rgba(160,210,240,.38); font-size: .8rem; cursor: pointer;
+  margin-top: 8px; transition: color .2s, transform .2s; padding: 0; letter-spacing: .04em;
+}
+.like-btn.liked { color: #f9a8d4; transform: scale(1.15); }
+
+/* Hearts */
+.heart {
+  position: absolute; pointer-events: none; font-size: 1rem;
+  animation: heartFloat 1.3s ease-out forwards; z-index: 20;
+}
+@keyframes heartFloat {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-65px) scale(.4); }
+}
+</style>
+</head>
+<body>
+<div id="phone">
+
+  <div id="bg"></div>
+  <div id="bg-overlay"></div>
+  <div id="sun-glow"></div>
+
+  <!-- Bubbles -->
+  <div class="bubble" style="width:7px;height:7px;left:15%;bottom:30%;--dur:5.5s;--delay:0s;--drift:10px"></div>
+  <div class="bubble" style="width:5px;height:5px;left:30%;bottom:24%;--dur:7s;--delay:1.5s;--drift:-8px"></div>
+  <div class="bubble" style="width:9px;height:9px;left:70%;bottom:20%;--dur:6s;--delay:0.8s;--drift:10px"></div>
+  <div class="bubble" style="width:5px;height:5px;left:52%;bottom:32%;--dur:8s;--delay:2.3s;--drift:-12px"></div>
+  <div class="bubble" style="width:8px;height:8px;left:82%;bottom:27%;--dur:5s;--delay:3.1s;--drift:7px"></div>
+
+  <!-- Wave -->
+  <div id="wave-bottom">
+    <svg viewBox="0 0 500 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,30 C80,4 170,58 260,30 C350,4 430,56 500,30 L500,60 L0,60 Z" fill="rgba(255,255,255,.08)"/>
+      <path d="M0,45 C90,18 190,66 280,44 C370,22 440,66 500,45 L500,60 L0,60 Z" fill="rgba(255,255,255,.06)"/>
+    </svg>
+  </div>
+
+  <!-- ══ MAIN SCREEN ══ -->
+  <div id="main-screen">
+
+    <!-- Hero -->
+    <div id="hero">
+      <img id="whale-img" src="./assets/小鯨魚.png" alt="小鯨魚"
+           onerror="this.outerHTML='<div style=font-size:3.2rem;animation:whaleFloat 3.4s ease-in-out infinite;flex-shrink:0;filter:drop-shadow(0 4px 16px rgba(80,210,255,.55))>🐋</div>'">
+      <div id="hero-text">
+        <h1>小鯨魚陪伴</h1>
+        <p>WHALE COMPANION</p>
+      </div>
+    </div>
+
+    <!-- Speech bubble -->
+    <div id="speech-bubble">嗨！我是你們的航海夥伴 ✦　讓我來幫你們記錄這段美好旅程吧！</div>
+
+    <div class="divider"></div>
+    <div class="section-label">今日陪伴功能</div>
+
+    <!-- Card grid -->
+    <div id="card-grid">
+
+      <!-- Festival (large top card) -->
+      <div class="ocean-card" id="card-festival" onclick="openSheet('festival')">
+        <div class="card-top">
+          <div class="card-label"><span class="icon">🎉</span>節日提醒</div>
+          <div class="see-more">查看全部 ›</div>
+        </div>
+
+        <!-- Next event highlight -->
+        <div id="next-event-banner">
+          <div>
+            <div class="countdown-big">3<span class="countdown-unit">天後</span></div>
+          </div>
+          <div class="next-info">
+            <div class="next-name">✦ 週年紀念日</div>
+            <div class="next-date">2026 年 5 月 31 日</div>
+          </div>
+        </div>
+
+        <!-- Mini list: next 3 upcoming -->
+        <div class="mini-festival-list">
+          <div class="mini-festival-item">
+            <div class="mini-dot" style="background:#f9a8d4;color:#f9a8d4"></div>
+            <div class="mini-name">七夕情人節</div>
+            <div class="mini-date">2026/8/22</div>
+            <div class="mini-days">86天</div>
+          </div>
+          <div class="mini-festival-item">
+            <div class="mini-dot" style="background:#90d8f0;color:#90d8f0"></div>
+            <div class="mini-name">對方生日</div>
+            <div class="mini-date">2026/9/15</div>
+            <div class="mini-days">110天</div>
+          </div>
+          <div class="mini-festival-item">
+            <div class="mini-dot" style="background:#a8e8c8;color:#a8e8c8"></div>
+            <div class="mini-name">聖誕節</div>
+            <div class="mini-date">2026/12/25</div>
+            <div class="mini-days">211天</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom row -->
+      <div id="card-bottom-row">
+
+        <!-- Gift card -->
+        <div class="ocean-card" id="card-gift" onclick="openSheet('gift')">
+          <div class="small-card-header">
+            <div class="small-card-title"><span class="icon">🎁</span>約會建議</div>
+            <div class="small-see-more">›</div>
+          </div>
+          <div class="gift-chips">
+            <div class="gift-chip">
+              <span class="g-icon">📖</span>
+              <span class="g-text">手寫航海日誌</span>
+              <span class="g-tag">浪漫</span>
+            </div>
+            <div class="gift-chip">
+              <span class="g-icon">⛵</span>
+              <span class="g-text">日落帆船體驗</span>
+              <span class="g-tag">體驗</span>
+            </div>
+            <div class="gift-chip">
+              <span class="g-icon">🌟</span>
+              <span class="g-text">星空相冊製作</span>
+              <span class="g-tag">手作</span>
+            </div>
+          </div>
+          <div class="gift-more">還有 3 個創意 ›</div>
+        </div>
+
+        <!-- Q&A card -->
+        <div class="ocean-card" id="card-qa" onclick="openSheet('qa')">
+          <div class="small-card-header">
+            <div class="small-card-title"><span class="icon">💬</span>問答記錄</div>
+            <div class="small-see-more">›</div>
+          </div>
+          <div class="qa-preview-wrap">
+            <div class="qa-preview-q" id="qa-preview-q">今天最感謝對方的一件事是什麼？</div>
+            <div class="qa-preview-answers">
+              <div class="qa-preview-row">
+                <div class="qa-preview-avatar me">我</div>
+                <div class="qa-preview-text" id="qa-preview-me">早上幫我準備早餐，讓我多睡了 15 分鐘。</div>
+              </div>
+              <div class="qa-preview-row">
+                <div class="qa-preview-avatar partner">TA</div>
+                <div class="qa-preview-text" id="qa-preview-partner">在我最累的時候，傳來一句「你很棒」。</div>
+              </div>
+            </div>
+          </div>
+          <div class="qa-more">共 5 筆記錄 ›</div>
+        </div>
+
+      </div><!-- /card-bottom-row -->
+    </div><!-- /card-grid -->
+  </div>
+
+  <!-- Overlay -->
+  <div class="sheet-overlay" id="overlay" onclick="closeAll()"></div>
+
+  <!-- Sheet: Festival -->
+  <div class="bottom-sheet" id="sheet-festival">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h2><span>🎉</span>節日提醒</h2>
+      <button class="sheet-close" onclick="closeAll()">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="festival-banner">
+        <div class="countdown">3</div>
+        <div class="festival-name">✦ 週年紀念日 ✦</div>
+        <div class="festival-date">距離你們在一起 1 週年還有 3 天</div>
+      </div>
+      <div class="upcoming-list">
+        <div class="upcoming-item">
+          <div class="dot" style="background:#ffd98a;color:#ffd98a"></div>
+          <div class="info"><div class="name">週年紀念日</div><div class="date">2026 年 5 月 31 日</div></div>
+          <div class="days">3 天</div>
+        </div>
+        <div class="upcoming-item">
+          <div class="dot" style="background:#f9a8d4;color:#f9a8d4"></div>
+          <div class="info"><div class="name">七夕情人節</div><div class="date">2026 年 8 月 22 日</div></div>
+          <div class="days">86 天</div>
+        </div>
+        <div class="upcoming-item">
+          <div class="dot" style="background:#90d8f0;color:#90d8f0"></div>
+          <div class="info"><div class="name">對方生日</div><div class="date">2026 年 9 月 15 日</div></div>
+          <div class="days">110 天</div>
+        </div>
+        <div class="upcoming-item">
+          <div class="dot" style="background:#a8e8c8;color:#a8e8c8"></div>
+          <div class="info"><div class="name">聖誕節</div><div class="date">2026 年 12 月 25 日</div></div>
+          <div class="days">211 天</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sheet: Gift -->
+  <div class="bottom-sheet" id="sheet-gift">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h2><span>🎁</span>約會送禮建議</h2>
+      <button class="sheet-close" onclick="closeAll()">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="gift-context">為週年紀念日精選的建議 ♡</div>
+      <div class="gift-grid">
+        <div class="gift-card"><div class="gift-icon">📖</div><div class="gift-title">手寫航海日誌</div><div class="gift-tag">浪漫首選</div></div>
+        <div class="gift-card"><div class="gift-icon">⛵</div><div class="gift-title">日落帆船體驗</div><div class="gift-tag">體驗型</div></div>
+        <div class="gift-card"><div class="gift-icon">🌟</div><div class="gift-title">星空相冊製作</div><div class="gift-tag">用心手作</div></div>
+        <div class="gift-card"><div class="gift-icon">🍽️</div><div class="gift-title">私廚燭光晚餐</div><div class="gift-tag">儀式感</div></div>
+        <div class="gift-card"><div class="gift-icon">🌸</div><div class="gift-title">共同種植盆栽</div><div class="gift-tag">長期陪伴</div></div>
+        <div class="gift-card"><div class="gift-icon">🎵</div><div class="gift-title">專屬歌單創作</div><div class="gift-tag">日常驚喜</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sheet: Q&A -->
+  <div class="bottom-sheet" id="sheet-qa">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h2><span>💬</span>歷史問答記錄</h2>
+      <button class="sheet-close" onclick="closeAll()">✕</button>
+    </div>
+    <div class="sheet-body">
+      <p style="font-size:.71rem;color:rgba(120,200,240,.42);margin-bottom:14px;letter-spacing:.07em;text-align:center">你們在航海日誌中的對話紀錄 ♡</p>
+      <div id="qa-list"></div>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+<script>
+const qaHistory = [
+  { date:'2026.05.27', question:'今天最感謝對方的一件事是什麼？', meAnswer:'早上幫我準備早餐，讓我多睡了 15 分鐘。', partnerAnswer:'在我最累的時候，傳來一句「你很棒」。' },
+  { date:'2026.05.25', question:'有什麼還沒說出口的話嗎？', meAnswer:'謝謝你一直在，我有時候不善言辭，但你懂得。', partnerAnswer:'你笑起來的樣子讓我每次都想把時間按下暫停鍵。' },
+  { date:'2026.05.22', question:'如果今天是旅程中的哪片海域，感覺是什麼？', meAnswer:'像是發現了新島嶼、既興奮又有點緊張的探索感。', partnerAnswer:'風平浪靜的午後海，太陽很曬但心裡很安靜。' },
+  { date:'2026.05.20', question:'最近想和對方一起去哪裡？', meAnswer:'日本京都！秋天的楓葉一定很美。', partnerAnswer:'只要是和你一起，去便利商店也很夠了。' },
+  { date:'2026.05.18', question:'今天你最想對對方做的一件溫柔的事？', meAnswer:'想幫你把頭髮弄一弄，然後說你今天很好看。', partnerAnswer:'默默幫你把外套拿來，不說什麼，只是放在你旁邊。' },
+];
+
+function renderQA() {
+  const list = document.getElementById('qa-list');
+  list.innerHTML = '';
+  qaHistory.forEach((qa, i) => {
+    const el = document.createElement('div');
+    el.className = 'qa-item';
+    el.innerHTML = `
+      <div class="qa-date">${qa.date}</div>
+      <div class="qa-question">${qa.question}</div>
+      <div class="qa-answers">
+        <div class="qa-answer"><div class="qa-avatar">我</div><div class="qa-text">${qa.meAnswer}</div></div>
+        <div class="qa-answer"><div class="qa-avatar partner">TA</div><div class="qa-text">${qa.partnerAnswer}</div></div>
+      </div>
+      <button class="like-btn" id="like-${i}" onclick="toggleLike(${i},this)">♡ 收藏這一天</button>
+    `;
+    list.appendChild(el);
+  });
+}
+
+function toggleLike(i, btn) {
+  btn.classList.toggle('liked');
+  btn.textContent = btn.classList.contains('liked') ? '♥ 已收藏' : '♡ 收藏這一天';
+  if (btn.classList.contains('liked')) spawnHearts(btn);
+}
+
+function spawnHearts(btn) {
+  const r = btn.getBoundingClientRect();
+  const pr = document.getElementById('phone').getBoundingClientRect();
+  ['♡','♥','✦','✿','❀'].forEach((sym, i) => {
+    const h = document.createElement('div');
+    h.className = 'heart'; h.textContent = sym;
+    h.style.left  = (r.left - pr.left + Math.random() * r.width) + 'px';
+    h.style.top   = (r.top  - pr.top  + r.height / 2) + 'px';
+    h.style.color = ['#f9a8d4','#7dcce8','#ffd98a','#a8e8c8','#d4b4ff'][i];
+    h.style.animationDelay = (i * 0.1) + 's';
+    document.getElementById('phone').appendChild(h);
+    setTimeout(() => h.remove(), 1500);
+  });
+}
+
+function openSheet(name) {
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('sheet-' + name).classList.add('open');
+}
+function closeAll() {
+  document.getElementById('overlay').classList.remove('open');
+  document.querySelectorAll('.bottom-sheet').forEach(s => s.classList.remove('open'));
+}
+
+let touchStartY = 0;
+document.querySelectorAll('.bottom-sheet').forEach(sheet => {
+  sheet.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, { passive: true });
+  sheet.addEventListener('touchend', e => { if (e.changedTouches[0].clientY - touchStartY > 60) closeAll(); }, { passive: true });
+});
+
+const bubbleMsgs = [
+  '嗨！我是你們的航海夥伴 ✦　讓我來幫你們記錄這段美好旅程吧！',
+  '今天也辛苦了 ✦　記得告訴對方你有多珍惜他/她哦！',
+  '週年紀念日快到了 🎉　要好好慶祝呢！',
+  '看看你們的旅程有多豐富 ✦　每一段記憶都是珍貴的寶藏！',
+];
+let bIdx = 0;
+const bubble = document.getElementById('speech-bubble');
+setInterval(() => {
+  bubble.style.opacity = '0'; bubble.style.transform = 'translateY(5px)';
+  setTimeout(() => {
+    bIdx = (bIdx + 1) % bubbleMsgs.length;
+    bubble.textContent = bubbleMsgs[bIdx];
+    bubble.style.opacity = '1'; bubble.style.transform = 'translateY(0)';
+  }, 420);
+}, 4500);
+
+renderQA();
+</script>
+</body>
+</html>

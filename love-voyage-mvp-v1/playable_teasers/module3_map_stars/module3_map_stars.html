@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>愛之航 · 地圖 &amp; 星空</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600&family=Playfair+Display:ital,wght@0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:#06040f;
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;
+  font-family:'Noto Serif TC',serif;
+}
+
+/* ── Phone ── */
+#phone{
+  position:relative;
+  width:min(390px,100vw);
+  height:min(844px,calc(100vw * 16/9));
+  max-height:100vh;
+  border-radius:40px;overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.07);
+}
+
+/* ════════════════════════════════════════
+   BACKGROUNDS
+════════════════════════════════════════ */
+.bg-layer{
+  position:absolute;inset:0;
+  background-size:cover;background-position:center;
+  transition:opacity .7s ease;
+}
+#bg-map { background-image:url('./assets/bg_map.png'); opacity:1; }
+
+/* Stars pan layer — phone-sized container, transforms from center */
+#stars-pan-layer{
+  position:absolute;inset:0;
+  transform-origin:50% 50%;
+  opacity:0;transition:opacity .7s ease;
+  pointer-events:none;
+}
+/* bg-stars & bg-glow are 3× oversized and centered so panning/zooming
+   never reveals an empty edge */
+#bg-stars,#bg-glow{
+  position:absolute;
+  width:300%;height:300%;
+  top:-100%;left:-100%;
+  background-size:cover;background-position:center;
+}
+#bg-stars{ background-image:url('./assets/bg_stars_dark.png');
+           filter:brightness(.55) saturate(.7); }
+#bg-glow { background-image:url('./assets/bg_stars_bright.png');
+           opacity:0;transition:opacity 1.4s ease;pointer-events:none; }
+
+/* Grid overlay removed */
+#map-grid{display:none;}
+
+/* Map tint */
+#map-tint{
+  position:absolute;inset:0;
+  background:linear-gradient(to bottom,rgba(200,170,110,.06),rgba(160,120,60,.1));
+  opacity:0;transition:opacity .7s;pointer-events:none;
+}
+
+/* ════════════════════════════════════════
+   MODE TOGGLE  (top-centre floating pill)
+════════════════════════════════════════ */
+#toggle{
+  position:absolute;top:16px;
+  left:calc(50% - 170px);   /* 對齊資訊方框左緣 */
+  transform:none;
+  display:flex;
+  width:130px;              /* 縮窄後固定寬度 */
+  background:rgba(28,14,4,.80);backdrop-filter:blur(10px);
+  border:1px solid rgba(200,155,70,.45);border-radius:99px;
+  overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.38);
+  z-index:25;
+}
+.tbtn{
+  flex:1;padding:7px 0;text-align:center;
+  font-family:'Noto Serif TC',serif;font-size:.72rem;color:rgba(255,220,150,.6);
+  background:transparent;border:none;cursor:pointer;letter-spacing:.07em;
+  transition:background .25s,color .25s;
+}
+.tbtn.on{background:rgba(200,155,70,.28);color:rgba(255,235,180,.95);}
+
+/* ════════════════════════════════════════
+   WHALE  (top-right sticker)
+════════════════════════════════════════ */
+#whale-btn{
+  position:absolute;top:12px;right:12px;z-index:25;
+  width:54px;height:54px;
+  background:transparent;border:none;cursor:pointer;padding:0;
+  filter:drop-shadow(0 4px 12px rgba(80,150,255,.4));
+  animation:wFloat 3s ease-in-out infinite;
+}
+#whale-btn img{width:100%;height:100%;object-fit:contain;}
+#whale-btn:active{transform:scale(.88);}
+@keyframes wFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+
+/* ════════════════════════════════════════
+   MAP MODE CONTENT
+════════════════════════════════════════ */
+#map-content{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;
+  padding-top:96px;
+  opacity:0;pointer-events:none;transition:opacity .5s;z-index:10;
+}
+
+/* ════════════════════════════════════════
+   MAP INFO CARD  — 羊皮紙航海日誌風
+   配色語言對齊 module1 / module2
+════════════════════════════════════════ */
+#frame-wrap{
+  width:88%;max-width:340px;
+  flex-shrink:0;
+  position:relative;
+  /* 木質別針投影感 */
+  filter:
+    drop-shadow(0 2px 0px rgba(90,50,15,.55))
+    drop-shadow(0 8px 20px rgba(0,0,0,.38))
+    drop-shadow(0 18px 40px rgba(0,0,0,.22));
+}
+
+/* ── 單層羊皮紙卡片 ── */
+.f-card{
+  background:linear-gradient(160deg,#fef4e0 0%,#f2dca0 45%,#e8cc88 100%);
+  border:1.5px solid rgba(160,110,40,.42);
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:
+    0 14px 40px rgba(0,0,0,.28),
+    inset 0 0 60px rgba(140,90,20,.06),
+    inset 0 1px 0 rgba(255,255,255,.55);   /* 頂部透氣高光 */
+  position:relative;
+}
+/* 羊皮紙紙紋暗紋 */
+.f-card::before{
+  content:'';
+  position:absolute;inset:0;border-radius:16px;
+  background:
+    repeating-linear-gradient(
+      92deg,
+      transparent 0px, transparent 18px,
+      rgba(120,80,20,.025) 18px, rgba(120,80,20,.025) 19px
+    ),
+    repeating-linear-gradient(
+      180deg,
+      transparent 0px, transparent 22px,
+      rgba(120,80,20,.02) 22px, rgba(120,80,20,.02) 23px
+    );
+  pointer-events:none;z-index:0;
+}
+
+/* ── 標題欄 ── */
+.f-title{
+  padding:10px 14px 9px;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  border-bottom:1px solid rgba(160,110,40,.28);
+  background:rgba(200,160,70,.12);
+  position:relative;z-index:1;
+}
+.f-title-ornament{
+  color:rgba(130,80,20,.45);
+  font-size:.68rem;
+}
+.f-title-text{
+  font-family:'Playfair Display',serif;font-style:italic;
+  font-size:.88rem;
+  color:#4a3010;
+  letter-spacing:.08em;
+  text-shadow:0 1px 0 rgba(255,255,255,.5);
+}
+
+/* ── 主體 ── */
+.f-body{
+  display:flex;gap:0;
+  min-height:186px;
+  position:relative;z-index:1;
+}
+.f-text{
+  flex:1;
+  padding:11px 13px;
+  font-size:.77rem;color:#4a3010;line-height:1.7;
+  background:transparent;
+  border-right:1px solid rgba(160,110,40,.22);
+}
+.f-text .f-event-tag{
+  display:inline-block;
+  font-size:.58rem;
+  color:rgba(110,75,25,.65);
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  border-bottom:1px dashed rgba(110,75,25,.3);
+  padding-bottom:4px;margin-bottom:8px;
+}
+
+/* ── 照片欄 ── */
+.f-img{
+  width:42%;
+  position:relative;
+  cursor:pointer;
+  overflow:hidden;
+  background:rgba(200,160,70,.1);
+}
+.f-img:hover .f-img-upload-hint{ opacity:1; }
+.f-img img{
+  width:100%;height:100%;
+  object-fit:cover;
+  display:block;
+  position:relative;z-index:1;
+}
+/* 未上傳佔位符 — 對齊 module2 mood-ring 風格 */
+.f-img-placeholder{
+  position:absolute;inset:0;z-index:1;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:7px;
+  padding:10px;
+}
+.f-img-placeholder .ph-frame{
+  width:52px;height:52px;border-radius:50%;
+  background:rgba(255,250,232,.55);
+  border:2px dashed rgba(110,75,25,.3);
+  box-shadow:
+    0 0 0 4px rgba(255,248,230,.4),
+    0 0 0 6px rgba(110,75,25,.07),
+    0 4px 12px rgba(0,0,0,.08);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;
+}
+.f-img-placeholder .ph-text{
+  font-size:.55rem;
+  color:rgba(110,75,25,.5);
+  letter-spacing:.06em;
+  text-align:center;line-height:1.5;
+}
+/* Hover 換圖提示 */
+.f-img-upload-hint{
+  position:absolute;inset:0;z-index:3;
+  background:rgba(74,48,16,.48);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity .2s;
+  font-size:.6rem;
+  color:rgba(255,248,225,.9);
+  letter-spacing:.07em;
+}
+/* Hidden file input */
+#photo-input{
+  position:absolute;opacity:0;width:0;height:0;pointer-events:none;
+}
+
+/* ── 新增事件 編輯面板 ── */
+#edit-panel{
+  display:none;
+  flex-direction:column;gap:10px;
+  padding:12px 14px 14px;
+  position:relative;z-index:1;
+}
+.ep-row{
+  display:flex;align-items:center;gap:6px;
+  font-size:.72rem;color:rgba(110,75,25,.7);letter-spacing:.06em;
+}
+.ep-row input[type="number"]{
+  width:52px;
+  background:rgba(255,252,238,.8);
+  border:1px solid rgba(160,110,40,.4);
+  border-radius:7px;
+  padding:4px 7px;
+  font-family:'Noto Serif TC',serif;font-size:.72rem;color:#4a3010;
+  text-align:center;outline:none;
+}
+.ep-row input[type="number"]:focus{border-color:rgba(160,110,40,.75);}
+.ep-title-input{
+  width:100%;
+  background:rgba(255,252,238,.8);
+  border:1px solid rgba(160,110,40,.4);
+  border-radius:7px;
+  padding:6px 10px;
+  font-family:'Playfair Display',serif;font-style:italic;
+  font-size:.84rem;color:#4a3010;outline:none;
+}
+.ep-title-input:focus{border-color:rgba(160,110,40,.75);}
+.ep-desc-input{
+  width:100%;height:72px;resize:none;
+  background:rgba(255,252,238,.8);
+  border:1px solid rgba(160,110,40,.4);
+  border-radius:7px;
+  padding:7px 10px;
+  font-family:'Noto Serif TC',serif;font-size:.72rem;color:#4a3010;
+  line-height:1.6;outline:none;
+}
+.ep-desc-input:focus{border-color:rgba(160,110,40,.75);}
+.ep-desc-input::placeholder,.ep-title-input::placeholder{
+  color:rgba(110,75,25,.35);
+}
+.ep-save{
+  align-self:flex-end;
+  background:linear-gradient(135deg,#9a6228,#c48840);
+  border:1px solid rgba(90,50,15,.4);
+  border-radius:10px;
+  padding:6px 18px;
+  font-family:'Noto Serif TC',serif;font-size:.72rem;
+  color:#fef4e0;letter-spacing:.08em;
+  cursor:pointer;
+  box-shadow:0 3px 10px rgba(0,0,0,.18);
+  transition:filter .15s,transform .15s;
+}
+.ep-save:hover{filter:brightness(1.08);}
+.ep-save:active{transform:scale(.95);}
+
+/* 空白新增島嶼的特殊樣式 */
+.isl.add-isl .isl-label{
+  background:rgba(160,110,40,.55);
+  border-color:rgba(220,180,90,.5);
+  font-size:.72rem;
+}
+
+/* ── Island carousel (bottom) ── */
+#islands{
+  position:absolute;
+  bottom:22%;left:0;right:0;
+  height:90px;
+  z-index:10;
+  overflow:visible;
+}
+.isl{
+  position:absolute;
+  left:50%;top:50%;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  cursor:pointer;background:transparent;border:none;padding:0;
+  /* base: centered; JS overrides translate+scale per island */
+  transform:translate(-50%,-50%) scale(1);
+  opacity:0;
+  pointer-events:none;
+  transition:transform .4s cubic-bezier(.34,1.56,.64,1),
+             opacity .3s ease,
+             filter .2s;
+  will-change:transform,opacity;
+}
+.isl img{
+  object-fit:contain;
+  filter:drop-shadow(0 8px 18px rgba(0,0,0,.28));
+}
+.isl.active-isl img{filter:drop-shadow(0 10px 22px rgba(255,200,80,.6));}
+.isl-label{
+  font-size:.52rem;color:rgba(255,248,225,.88);
+  background:rgba(74,48,16,.55);
+  border:1px solid rgba(200,160,80,.35);
+  border-radius:99px;padding:2px 7px;letter-spacing:.06em;
+  white-space:nowrap;
+  text-shadow:0 1px 3px rgba(0,0,0,.4);
+}
+
+/* Ship sticker — HOME BUTTON (bottom-right) */
+#ship-home{
+  position:absolute;bottom:20px;right:0px;z-index:15;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  cursor:pointer;background:transparent;border:none;padding:0;
+  animation:shipBob 4s ease-in-out infinite;
+  transition:transform .2s cubic-bezier(.34,1.56,.64,1),filter .15s;
+}
+#ship-home:hover{filter:brightness(1.12);}
+#ship-home:active{transform:scale(.9);}
+#ship-home img{
+  width:160px;
+  filter:drop-shadow(0 8px 18px rgba(0,0,0,.28));
+  pointer-events:none;
+}
+
+/* ── Loading toast (matches module1 style) ── */
+#nav-toast{
+  position:absolute;top:22%;left:50%;
+  transform:translateX(-50%) translateY(-10px);
+  background:rgba(18,10,4,.84);
+  backdrop-filter:blur(14px);
+  border:1px solid rgba(255,215,130,.42);
+  border-radius:99px;padding:11px 24px;
+  color:#fde8b8;font-size:.78rem;letter-spacing:.09em;
+  white-space:nowrap;
+  box-shadow:0 10px 28px rgba(0,0,0,.32);
+  opacity:0;pointer-events:none;
+  transition:opacity .32s,transform .38s cubic-bezier(.34,1.56,.64,1);
+  z-index:30;
+}
+#nav-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── Sparkle particles ── */
+.sp{
+  position:absolute;pointer-events:none;
+  width:7px;height:7px;border-radius:50%;
+  animation:spA .7s ease-out forwards;z-index:40;
+}
+@keyframes spA{
+  0%  {opacity:1;transform:translate(0,0) scale(1);}
+  100%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(0);}
+}
+.home-label{
+  background:rgba(255,255,255,.84);
+  border:1px solid rgba(255,255,255,.95);
+  border-radius:99px;
+  padding:2px 11px;
+  font-size:.6rem;color:#4a3018;
+  letter-spacing:.1em;
+  box-shadow:0 2px 6px rgba(0,0,0,.18);
+  white-space:nowrap;pointer-events:none;
+}
+@keyframes shipBob{0%,100%{transform:rotate(-1deg);}50%{transform:translateY(6px) rotate(1deg);}}
+
+/* ════════════════════════════════════════
+   STARS MODE
+════════════════════════════════════════ */
+#stars-content{
+  position:absolute;inset:0;
+  pointer-events:none;opacity:0;transition:opacity .5s;z-index:10;
+}
+
+/* CSS star points */
+#css-stars{
+  position:absolute;inset:0;pointer-events:none;overflow:hidden;
+}
+.cstar{
+  position:absolute;color:#ffd98a;
+  font-size:var(--fs,12px);
+  opacity:var(--op,.7);
+  animation:twinkle var(--dur,3s) ease-in-out infinite;
+  animation-delay:var(--del,0s);
+}
+@keyframes twinkle{
+  0%,100%{opacity:var(--op,.7);transform:scale(1);}
+  50%    {opacity:1;transform:scale(1.4);}
+}
+
+/* Nebula glow layer */
+#nebula{
+  position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 40% at 55% 30%, rgba(40,100,80,.28), transparent 70%),
+    radial-gradient(ellipse 40% 25% at 30% 50%, rgba(20,60,80,.22), transparent 65%),
+    radial-gradient(ellipse 50% 30% at 70% 60%, rgba(30,50,90,.18), transparent 70%);
+}
+
+/* Goals Drawer */
+#drawer{
+  position:absolute;bottom:0;left:0;right:0;
+  background:rgba(12,8,24,.92);backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.16);border-radius:28px 28px 0 0;
+  box-shadow:0 -12px 34px rgba(0,0,0,.45);
+  transform:translateY(calc(100% - 54px));
+  transition:transform .45s cubic-bezier(.32,1,.32,1);
+  z-index:28;
+  max-height:74%;
+  display:flex;flex-direction:column;
+}
+#drawer.open{transform:translateY(0);}
+
+#drw-handle{
+  flex-shrink:0;cursor:pointer;padding:12px 20px 8px;
+}
+.pill{width:36px;height:4px;background:rgba(255,255,255,.28);border-radius:99px;margin:0 auto 9px;}
+#drw-title-row{
+  display:flex;align-items:center;justify-content:space-between;
+}
+#drw-title-row .label{font-size:.86rem;color:rgba(255,255,255,.85);letter-spacing:.1em;}
+#drw-title-row .summary{font-size:.7rem;color:rgba(180,155,255,.7);}
+
+#goals-list{
+  overflow-y:auto;flex:1;padding:4px 16px 12px;scrollbar-width:none;
+}
+#goals-list::-webkit-scrollbar{display:none;}
+
+.goal{
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);
+  border-radius:14px;padding:12px 14px;margin-bottom:10px;
+}
+.goal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.goal-name{font-size:.8rem;color:rgba(255,255,255,.88);flex:1;}
+.goal-pct{font-size:.7rem;color:rgba(180,155,255,.78);margin-left:8px;}
+.goal-chk{
+  width:22px;height:22px;border:2px solid rgba(167,139,250,.45);
+  border-radius:6px;flex-shrink:0;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .2s,border-color .2s;margin-left:8px;font-size:.75rem;color:#fff;
+}
+.goal-chk.done{background:linear-gradient(135deg,#a78bfa,#60a5fa);border-color:transparent;}
+
+.prog-track{
+  width:100%;height:7px;background:rgba(255,255,255,.1);
+  border-radius:99px;overflow:visible;cursor:pointer;position:relative;
+}
+.prog-fill{
+  height:100%;border-radius:99px;
+  background:linear-gradient(90deg,#a78bfa,#60a5fa,#34d399);
+  transition:width .6s cubic-bezier(.34,1.56,.64,1);position:relative;
+}
+.prog-fill::after{
+  content:'';position:absolute;right:-1px;top:-2px;
+  width:11px;height:11px;border-radius:50%;background:#fff;
+  box-shadow:0 0 8px rgba(167,139,250,.9);
+}
+.prog-btns{display:flex;gap:6px;margin-top:8px;align-items:center;}
+.pbtn{
+  width:27px;height:27px;border:1px solid rgba(255,255,255,.28);
+  background:rgba(255,255,255,.07);border-radius:50%;
+  color:rgba(255,255,255,.8);font-size:.95rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,transform .15s;
+}
+.pbtn:active{background:rgba(255,255,255,.2);transform:scale(.9);}
+.pval{font-size:.7rem;color:rgba(255,255,255,.55);min-width:32px;text-align:center;}
+
+/* Add goal row */
+#add-row{
+  display:flex;gap:8px;padding:8px 16px 18px;flex-shrink:0;
+}
+#goal-input{
+  flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);
+  border-radius:13px;padding:9px 13px;
+  color:rgba(255,255,255,.85);font-family:'Noto Serif TC',serif;font-size:.8rem;outline:none;
+}
+#goal-input::placeholder{color:rgba(255,255,255,.28);}
+#goal-input:focus{border-color:rgba(167,139,250,.55);}
+#add-btn{
+  width:40px;height:40px;
+  background:linear-gradient(135deg,#7c3aed,#2563eb);
+  border:none;border-radius:11px;color:#fff;font-size:1.25rem;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 5px 14px rgba(124,58,237,.4);transition:transform .15s;
+}
+#add-btn:active{transform:scale(.9);}
+
+/* ════════════════════════════════════════
+   WHALE MODAL
+════════════════════════════════════════ */
+#wmodal{
+  position:absolute;inset:0;
+  background:rgba(0,0,0,.52);backdrop-filter:blur(5px);
+  display:flex;align-items:center;justify-content:center;
+  z-index:40;opacity:0;pointer-events:none;transition:opacity .3s;
+}
+#wmodal.show{opacity:1;pointer-events:all;}
+#wmodal-box{
+  width:86%;max-width:320px;
+  background:rgba(16,10,38,.92);backdrop-filter:blur(22px);
+  border:1px solid rgba(255,255,255,.32);border-radius:24px;
+  padding:24px 20px 20px;
+  box-shadow:0 22px 55px rgba(0,0,0,.55);
+  transform:scale(.9) translateY(22px);
+  transition:transform .38s cubic-bezier(.34,1.56,.64,1);
+}
+#wmodal.show #wmodal-box{transform:scale(1) translateY(0);}
+#wmodal-header{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  margin-bottom:16px;
+}
+#wmodal-header img{
+  width:52px;height:52px;object-fit:contain;
+  filter:drop-shadow(0 4px 10px rgba(80,150,255,.35));
+  animation:wFloat 3s ease-in-out infinite;
+}
+#wmodal h3{font-size:.92rem;color:rgba(255,255,255,.88);text-align:center;letter-spacing:.08em;margin:0;}
+.fcard{
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);
+  border-radius:14px;padding:12px 14px;margin-bottom:10px;
+}
+.fcard h4{font-size:.82rem;color:#ffd98a;margin-bottom:4px;}
+.fcard p {font-size:.74rem;color:rgba(255,255,255,.62);line-height:1.55;}
+#close-wmodal{
+  display:block;width:100%;margin-top:10px;padding:10px;
+  background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.22);
+  border-radius:12px;color:rgba(255,255,255,.65);
+  font-family:'Noto Serif TC',serif;font-size:.8rem;cursor:pointer;
+  letter-spacing:.09em;transition:background .2s;
+}
+#close-wmodal:hover{background:rgba(255,255,255,.17);}
+
+/* ── 默契繩結增加動畫 ── */
+#bond-popup{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  z-index:80;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  pointer-events:none;
+  opacity:0;
+  transition:none;
+  background:rgba(255,255,255,.5);
+  border-radius:24px;
+  padding:18px 28px 14px;
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+}
+#bond-popup.show{
+  animation:bondPop .6s cubic-bezier(.34,1.56,.64,1) forwards, bondFade 2.8s ease forwards;
+}
+@keyframes bondPop{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(0) rotate(-10deg);}
+  60%{opacity:1;transform:translate(-50%,-65%) scale(1.12) rotate(3deg);}
+  100%{opacity:1;transform:translate(-50%,-65%) scale(1) rotate(0deg);}
+}
+@keyframes bondFade{
+  0%,55%{opacity:1;}
+  85%{opacity:0;}
+  100%{opacity:0;}
+}
+.bond-knot{width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(180,100,20,.45));}
+.bond-gain{
+  font-family:'Noto Serif TC',serif;
+  font-size:1.3rem;font-weight:700;
+  color:#c06010;
+  text-shadow:0 2px 8px rgba(255,200,80,.7),0 0 20px rgba(255,180,40,.5);
+  letter-spacing:.06em;
+}
+.bond-label{font-size:.62rem;color:#8a5820;letter-spacing:.14em;}
+
+/* ── 小鯨魚對話框 ── */
+#whale-bubble{
+  position:absolute;
+  top:18px;
+  right:74px;          /* 緊貼鯨魚左側 */
+  max-width:148px;
+  background:rgba(255,252,238,.96);
+  border:1.5px solid rgba(160,110,40,.38);
+  border-radius:12px 12px 4px 12px;
+  padding:8px 11px;
+  font-family:'Noto Serif TC',serif;
+  font-size:.65rem;
+  color:#4a3010;
+  line-height:1.55;
+  letter-spacing:.03em;
+  box-shadow:0 6px 18px rgba(0,0,0,.22);
+  /* 右下尖角（指向鯨魚） */
+  z-index:26;
+  opacity:0;
+  transform:translateY(-4px) scale(.95);
+  transform-origin:right top;
+  pointer-events:none;
+  transition:opacity .32s ease, transform .32s cubic-bezier(.34,1.56,.64,1);
+}
+#whale-bubble::after{
+  content:'';
+  position:absolute;
+  right:-9px;top:12px;
+  border:5px solid transparent;
+  border-left-color:rgba(160,110,40,.38);
+}
+#whale-bubble::before{
+  content:'';
+  position:absolute;
+  right:-7px;top:13px;
+  border:4px solid transparent;
+  border-left-color:rgba(255,252,238,.96);
+  z-index:1;
+}
+#whale-bubble.show{
+  opacity:1;
+  transform:translateY(0) scale(1);
+  pointer-events:all;
+  cursor:pointer;
+}
+#whale-bubble .wb-hint{
+  display:block;
+  margin-top:5px;
+  font-size:.58rem;
+  color:rgba(110,75,25,.5);
+  letter-spacing:.06em;
+}
+</style>
+</head>
+<body>
+<div id="phone">
+
+  <!-- Backgrounds -->
+  <div class="bg-layer" id="bg-map"></div>
+
+  <!-- Stars pan layer (oversized bg + star particles, transforms as one unit) -->
+  <div id="stars-pan-layer">
+    <div id="bg-stars"></div>
+    <div id="bg-glow"></div>
+    <div id="css-stars"></div>
+    <div id="nebula"></div>
+  </div>
+
+  <div id="map-grid"></div>
+  <div id="map-tint"></div>
+
+  <!-- Mode Toggle -->
+  <div id="toggle">
+    <button class="tbtn on" id="tbtn-map"   onclick="setMode('map')">🗺 地圖</button>
+    <button class="tbtn"    id="tbtn-stars" onclick="setMode('stars')">✦ 星空</button>
+  </div>
+
+  <!-- Whale (top-right) -->
+  <button id="whale-btn" onclick="openModal()">
+    <img id="whale-img" src="./assets/小鯨魚.png" alt="🐋">
+  </button>
+  <!-- 鯨魚對話氣泡 -->
+  <div id="whale-bubble" onclick="openModal()"></div>
+
+  <!-- ═══ MAP CONTENT ═══ -->
+  <div id="map-content">
+
+    <!-- 羊皮紙日誌卡片 -->
+    <div id="frame-wrap">
+      <div class="f-card">
+        <!-- Title bar -->
+        <div class="f-title">
+          <span class="f-title-ornament">✦</span>
+          <span class="f-title-text" id="ev-title">今天終於牽手了！</span>
+          <span class="f-title-ornament">✦</span>
+        </div>
+        <!-- Body: text + photo (閱讀模式) -->
+        <div class="f-body" id="read-panel">
+          <div class="f-text">
+            <div class="f-event-tag" id="ev-tag">航行第 — 天</div>
+            <div id="ev-desc"></div>
+          </div>
+          <div class="f-img" id="photo-slot" onclick="triggerPhotoUpload()">
+            <img id="ev-img" src="" alt="旅途照片" style="display:none">
+            <div class="f-img-placeholder" id="photo-placeholder">
+              <div class="ph-frame">📷</div>
+              <span class="ph-text">點擊上傳<br>旅途照片</span>
+            </div>
+            <div class="f-img-upload-hint">🖼 更換照片</div>
+            <input type="file" id="photo-input" accept="image/*" onchange="onPhotoSelected(event)">
+          </div>
+        </div>
+        <!-- 編輯模式 (空白島嶼) -->
+        <div id="edit-panel">
+          <div class="ep-row">
+            ✦ 航行第
+            <input type="number" id="ep-days" min="1" placeholder="—">
+            天的記憶
+          </div>
+          <input class="ep-title-input" id="ep-title" type="text" placeholder="寫下這段旅程的標題…" maxlength="24">
+          <textarea class="ep-desc-input" id="ep-desc" placeholder="記錄這天發生了什麼…" maxlength="200"></textarea>
+          <button class="ep-save" onclick="saveNewIsland()">加入航程 ⚓</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Island navigation stickers -->
+    <div id="islands"></div>
+
+    <!-- Ship thumbnail — Home Button -->
+    <button id="ship-home" onclick="goHome()" title="回首頁">
+      <img src="./assets/船隻縮圖.png" alt="回首頁"
+           onerror="this.src='./assets/ship_sticker.png'">
+      <span class="home-label">⚓ 回首頁</span>
+    </button>
+
+  </div><!-- /map-content -->
+
+  <!-- ═══ STARS CONTENT (drawer only) ═══ -->
+  <div id="stars-content" style="pointer-events:none;">
+    <div id="drawer">
+      <div id="drw-handle" onclick="toggleDrawer()">
+        <div class="pill"></div>
+        <div id="drw-title-row">
+          <span class="label">✦ 共同目標清單</span>
+          <span class="summary" id="drw-summary">0 / 0 完成</span>
+        </div>
+      </div>
+      <div id="goals-list"></div>
+      <div id="add-row">
+        <input type="text" id="goal-input" placeholder="新增一個共同目標…" maxlength="30">
+        <button id="add-btn" onclick="addGoal()">＋</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 默契繩結增加動畫 -->
+  <div id="bond-popup">
+    <img class="bond-knot" src="./assets/默契繩結.png" alt="默契繩結">
+    <div class="bond-gain" id="bond-gain-text">+50</div>
+    <div class="bond-label">默契值提升</div>
+  </div>
+
+  <!-- Nav toast -->
+  <div id="nav-toast"></div>
+
+  <!-- Whale Modal -->
+  <div id="wmodal">
+    <div id="wmodal-box">
+      <div id="wmodal-header">
+        <img src="./assets/小鯨魚.png" alt="小鯨魚">
+        <h3>小鯨魚想說⋯</h3>
+      </div>
+      <div class="fcard">
+        <h4>🎉 一週年快樂！</h4>
+        <p>你們已經一起航行了整整 365 天。風平浪靜有過，浪頭打來也撐過了——這段旅程，值得好好記下來。</p>
+      </div>
+      <div class="fcard">
+        <h4>💝 七夕情人節 — 還有 86 天</h4>
+        <p>建議提前準備：手寫情書 + 親手製作的紀念冊。</p>
+      </div>
+      <div class="fcard">
+        <h4>⚓ 下一個里程碑</h4>
+        <p>距離航行第 500 天還有 135 天。要不要一起計畫個小小的慶祝儀式？</p>
+      </div>
+      <div class="fcard">
+        <h4>🎁 約會送禮靈感</h4>
+        <p>✦ 兩人共讀計劃<br>✦ 星空主題相冊<br>✦ 預訂日落帆船體驗</p>
+      </div>
+      <div class="fcard">
+        <h4>✦ 給這段旅程的提醒</h4>
+        <p>有些話當下來不及說，可以記在新的小島裡。滑到最右邊，用「＋」留下新的記憶。</p>
+      </div>
+      <button id="close-wmodal" onclick="closeModal()">收起 ✕</button>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+
+<script>
+/* ═══════════════════
+   ISLAND DATA (from relationship_milestones.csv)
+═══════════════════ */
+const islands = [
+  { days:5,   theme:'第一次牽手',     img:'牽手.png',      imgPos:'62% center', title:'今天終於牽手了！',         desc:'今天我們終於牽手了！現在回想起來，我的手心好像還在狂冒汗。並肩走在一起的時候，兩個人明明都裝得很鎮定，結果你不經意地碰到我的手，下一秒就溫柔地把我握緊了。那一刻，我覺得我的心跳聲大到快把耳朵震聾了啦，你一定也有聽見吧？' },
+  { days:14,  theme:'第一次擁抱與親吻', img:'擁抱.png',      imgPos:'center center', title:'原來你的抱抱是超級充電站！', desc:'今天真的是太神奇的一天！本來下班累得半死，結果碰面時你突然給了我一個大大的擁抱，瞬間覺得整天的疲憊都被清空了，靠在你懷裡真的好有安全感。而且後來…你還偷親了我一下！我們兩個人當下都愣住了，然後看著對方忍不住傻笑。' },
+  { days:30,  theme:'交往第一個月',    img:'第一個月.png',   imgPos:'center center', title:'第一個月，過關！',           desc:'哇，不知不覺我們竟然在一起一個月了耶！這三十天好像過得特別快，我們一起吃了好多頓晚餐，聊了好多無聊的廢話。我覺得最棒的是，我們越來越懂對方的地雷和喜好，就像在慢慢拼湊一張專屬於我們兩個的愛情地圖一樣。' },
+  { days:100, theme:'第一次旅行',      img:'第一次旅行.png', imgPos:'80% center', title:'跟你出門就算迷路也開心',     desc:'我們第一次的小旅行圓滿結束啦！今天剛回到家，雖然昨天找路的時候有點小迷航，但後來我們買了宵夜坐在海邊吹風，看著你在旁邊笑著跟我說話，突然覺得就算迷路也很浪漫。這趟旅行讓我發現，你真的是個超可靠的旅伴。' },
+  { days:365, theme:'交往一週年',      img:'一周年.png',     imgPos:'center center', title:'一週年快樂，未來繼續指教',   desc:'嘿，一週年快樂！這365天真的發生了好多事，從剛開始的客氣，到現在完全在你面前放飛自我。謝謝你一直包容我，總是穩穩地接住我的情緒。一週年只是一個小小的里程碑，我們的航程才剛開始呢！' },
+  { blank:true }, // 空白新增島嶼（永遠在最右）
+];
+const BLANK_IDX = islands.length - 1;       // 空白島嶼的 index
+let curIsland = BLANK_IDX - 1;              // 預設：最後一個有內容的島（一周年）
+
+/* ═══════════════════
+   PHOTO STORE  (in-memory per island)
+═══════════════════ */
+const photoStore = {}; // key: island index → data URL
+
+function triggerPhotoUpload() {
+  document.getElementById('photo-input').click();
+}
+
+function onPhotoSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    photoStore[curIsland] = ev.target.result;
+    showPhoto(curIsland);
+  };
+  reader.readAsDataURL(file);
+  // Reset so the same file can be re-selected
+  e.target.value = '';
+}
+
+function showPhoto(i) {
+  const img  = document.getElementById('ev-img');
+  const ph   = document.getElementById('photo-placeholder');
+  const hint = document.querySelector('.f-img-upload-hint');
+  if (photoStore[i]) {
+    // 使用者已上傳照片
+    img.src = photoStore[i];
+    img.style.display = 'block';
+    ph.style.display  = 'none';
+    if (hint) hint.textContent = '🖼 更換照片';
+  } else if (islands[i].img) {
+    // 使用素材庫圖片
+    img.src = './assets/' + islands[i].img;
+    img.style.objectPosition = islands[i].imgPos || 'center center';
+    img.style.display = 'block';
+    ph.style.display  = 'none';
+    if (hint) hint.textContent = '🖼 更換照片';
+  } else {
+    img.style.display = 'none';
+    ph.style.display  = 'flex';
+    if (hint) hint.textContent = '📷 上傳照片';
+  }
+}
+
+/* Build island row */
+const islandsEl = document.getElementById('islands');
+islands.forEach((isl, i) => {
+  const btn = document.createElement('button');
+  btn.className = isl.blank ? 'isl add-isl' : 'isl';
+  btn.innerHTML = isl.blank
+    ? `<img src="./assets/icon_island.png" alt="新增" style="width:43px;opacity:.55;filter:drop-shadow(0 6px 14px rgba(0,0,0,.22))">
+       <span class="isl-label">＋</span>`
+    : `<img src="./assets/icon_island.png" alt="${isl.theme}" style="width:43px">
+       <span class="isl-label">${isl.days}</span>`;
+  btn.onclick = () => selectIsland(i);
+  islandsEl.appendChild(btn);
+});
+
+/* ── Swipe to select island ── */
+(function addIslandSwipe(){
+  const el = document.getElementById('map-content');
+  let sx = null, sy = null;
+  el.addEventListener('touchstart', e => {
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+  }, { passive: true });
+  el.addEventListener('touchend', e => {
+    if (sx === null) return;
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+      // horizontal swipe
+      if (dx < 0) selectIsland(Math.min(curIsland + 1, islands.length - 1)); // swipe left → next
+      else         selectIsland(Math.max(curIsland - 1, 0));                   // swipe right → prev
+    }
+    sx = null; sy = null;
+  }, { passive: true });
+  /* Desktop: drag */
+  let msx = null;
+  el.addEventListener('mousedown', e => { msx = e.clientX; });
+  el.addEventListener('mouseup',   e => {
+    if (msx === null) return;
+    const dx = e.clientX - msx;
+    if (Math.abs(dx) > 40) {
+      if (dx < 0) selectIsland(Math.min(curIsland + 1, islands.length - 1));
+      else         selectIsland(Math.max(curIsland - 1, 0));
+    }
+    msx = null;
+  });
+})();
+
+function selectIsland(i) {
+  curIsland = i;
+  document.querySelectorAll('.isl').forEach((btn, j) => {
+    const offset = j - i;
+    const abs    = Math.abs(offset);
+    btn.classList.toggle('active-isl', offset === 0);
+    if (offset === 0) {
+      // active — centre, 6×
+      btn.style.transform     = 'translate(-50%,-50%) scale(4.2)';
+      btn.style.opacity       = '1';
+      btn.style.pointerEvents = 'all';
+      btn.style.zIndex        = '20';
+    } else if (abs === 1) {
+      // immediate neighbours — ±200px from centre (clear of 6× active island)
+      const xPx = offset * 140;
+      btn.style.transform     = `translate(calc(-50% + ${xPx}px),-50%) scale(1.4)`;
+      btn.style.opacity       = '0.45';
+      btn.style.pointerEvents = 'all';
+      btn.style.zIndex        = '10';
+    } else {
+      // far islands — off-screen, invisible
+      const xPx = (offset > 0 ? 1 : -1) * 380;
+      btn.style.transform     = `translate(calc(-50% + ${xPx}px),-50%) scale(0.5)`;
+      btn.style.opacity       = '0';
+      btn.style.pointerEvents = 'none';
+      btn.style.zIndex        = '1';
+    }
+  });
+  // Update info panel
+  const isl = islands[i];
+  const isBlank = !!isl.blank;
+  document.getElementById('read-panel').style.display = isBlank ? 'none' : 'flex';
+  document.getElementById('edit-panel').style.display = isBlank ? 'flex' : 'none';
+  // 空白島嶼：標題列改提示文字，清空編輯欄
+  if (isBlank) {
+    document.getElementById('ev-title').textContent = '記錄新的一頁';
+    document.getElementById('ep-days').value  = 392;
+    document.getElementById('ep-title').value = '';
+    document.getElementById('ep-desc').value  = '';
+  } else {
+    document.getElementById('ev-tag').textContent   = '航行第 ' + isl.days + ' 天';
+    document.getElementById('ev-title').textContent = isl.title;
+    document.getElementById('ev-desc').textContent  = isl.desc;
+    showPhoto(i);
+  }
+  // Pulse panel
+  const fw = document.getElementById('frame-wrap');
+  fw.style.transition = 'transform .3s cubic-bezier(.34,1.56,.64,1)';
+  fw.style.transform  = 'scale(.97)';
+  setTimeout(() => fw.style.transform = '', 300);
+}
+
+/* ═══════════════════
+   MODE SWITCH
+═══════════════════ */
+let currentMode = 'map';
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('tbtn-map').classList.toggle('on',   mode === 'map');
+  document.getElementById('tbtn-stars').classList.toggle('on', mode === 'stars');
+
+  const isMap   = mode === 'map';
+  const isStars = !isMap;
+
+  document.getElementById('bg-map').style.opacity           = isMap   ? '1' : '0';
+  document.getElementById('stars-pan-layer').style.opacity  = isStars ? '1' : '0';
+  // Reset glow when returning to map so it doesn't bleed through
+  if (isMap) document.getElementById('bg-glow').style.opacity = '0';
+  document.getElementById('map-grid').style.opacity         = isMap   ? '1' : '0';
+  document.getElementById('map-tint').style.opacity         = isMap   ? '1' : '0';
+  document.getElementById('map-content').style.opacity      = isMap   ? '1' : '0';
+  document.getElementById('map-content').style.pointerEvents = isMap  ? 'all' : 'none';
+  document.getElementById('stars-content').style.opacity    = isStars ? '1' : '0';
+  document.getElementById('stars-content').style.pointerEvents = isStars ? 'all' : 'none';
+
+  // Swap whale image per mode
+  document.getElementById('whale-img').src = './assets/小鯨魚.png';
+
+  if (isStars) updateStarGlow();
+}
+
+/* ═══════════════════
+   CSS STAR POINTS
+═══════════════════ */
+(function buildStars() {
+  const container = document.getElementById('css-stars');
+  const data = [
+    {l:15,t:12,s:16,op:.9,dur:2.2,del:0},
+    {l:72,t:8, s:10,op:.6,dur:3.1,del:.5},
+    {l:38,t:20,s:12,op:.8,dur:2.8,del:.3},
+    {l:55,t:35,s:8, op:.5,dur:3.5,del:.8},
+    {l:20,t:40,s:14,op:.75,dur:2.5,del:.2},
+    {l:80,t:25,s:11,op:.65,dur:3.2,del:.6},
+    {l:60,t:15,s:9, op:.7, dur:2.9,del:.4},
+    {l:88,t:48,s:13,op:.8, dur:2.4,del:.1},
+    {l:10,t:60,s:8, op:.55,dur:3.6,del:.9},
+    {l:45,t:55,s:10,op:.7, dur:3.0,del:.35},
+    {l:30,t:70,s:12,op:.65,dur:2.7,del:.55},
+    {l:75,t:65,s:9, op:.6, dur:3.3,del:.7},
+    {l:50,t:80,s:11,op:.72,dur:2.6,del:.25},
+    {l:22,t:85,s:8, op:.5, dur:3.4,del:.85},
+    {l:65,t:78,s:14,op:.85,dur:2.3,del:.15},
+    {l:90,t:72,s:10,op:.62,dur:3.0,del:.45},
+    {l:5, t:48,s:9, op:.6, dur:2.9,del:.6},
+    {l:42,t:90,s:7, op:.45,dur:3.7,del:.95},
+    {l:85,t:88,s:12,op:.7, dur:2.5,del:.05},
+    {l:35,t:10,s:8, op:.55,dur:3.2,del:.75},
+  ];
+  data.forEach(({l,t,s,op,dur,del}) => {
+    const el = document.createElement('span');
+    el.className = 'cstar';
+    el.textContent = '✦';
+    el.style.cssText = `left:${l}%;top:${t}%;--fs:${s}px;--op:${op};--dur:${dur}s;--del:${del}s`;
+    container.appendChild(el);
+  });
+})();
+
+/* ═══════════════════
+   GOALS
+═══════════════════ */
+let goals = [
+  { name:'去京都看楓葉',     progress:30,  done:false },
+  { name:'一起學做義大利麵', progress:60,  done:false },
+  { name:'共讀一本小說',     progress:80,  done:false },
+  { name:'看一場日出',       progress:100, done:true  },
+];
+
+function renderGoals() {
+  const list = document.getElementById('goals-list');
+  list.innerHTML = '';
+  goals.forEach((g, i) => {
+    const el = document.createElement('div');
+    el.className = 'goal';
+    el.innerHTML = `
+      <div class="goal-hd">
+        <div class="goal-name">${g.name}</div>
+        <div class="goal-pct">${g.progress}%</div>
+        <div class="goal-chk ${g.done?'done':''}" onclick="toggleDone(${i})">${g.done?'✓':''}</div>
+      </div>
+      <div class="prog-track" onclick="clickTrack(${i},event)">
+        <div class="prog-fill" style="width:${g.progress}%"></div>
+      </div>
+      <div class="prog-btns">
+        <button class="pbtn" onclick="adj(${i},-10)">−</button>
+        <div class="pval">${g.progress}%</div>
+        <button class="pbtn" onclick="adj(${i},+10)">＋</button>
+      </div>`;
+    list.appendChild(el);
+  });
+  const done = goals.filter(g => g.done).length;
+  document.getElementById('drw-summary').textContent = `${done} / ${goals.length} 完成`;
+  updateStarGlow();
+}
+
+function adj(i, d) {
+  goals[i].progress = Math.min(100, Math.max(0, goals[i].progress + d));
+  if (goals[i].progress === 100) goals[i].done = true;
+  renderGoals(); flashGlow();
+}
+function clickTrack(i, e) {
+  const r = e.currentTarget.getBoundingClientRect();
+  goals[i].progress = Math.round(((e.clientX - r.left) / r.width) * 10) * 10;
+  goals[i].done = goals[i].progress === 100;
+  renderGoals(); flashGlow();
+}
+function toggleDone(i) {
+  goals[i].done = !goals[i].done;
+  if (goals[i].done) goals[i].progress = 100;
+  renderGoals(); flashGlow();
+}
+function addGoal() {
+  const inp = document.getElementById('goal-input');
+  const name = inp.value.trim();
+  if (!name) { inp.style.borderColor = 'rgba(255,100,100,.6)'; setTimeout(()=>inp.style.borderColor='',800); return; }
+  goals.push({ name, progress:0, done:false });
+  inp.value = '';
+  renderGoals();
+}
+
+/* ── Star glow linked to goal progress ── */
+function updateStarGlow() {
+  if (currentMode !== 'stars') return;
+  const avg = goals.length ? goals.reduce((s,g) => s+g.progress, 0) / goals.length : 0;
+  document.getElementById('bg-glow').style.opacity = (avg / 100) * 0.88;
+}
+function flashGlow() {
+  const g = document.getElementById('bg-glow');
+  const prev = parseFloat(g.style.opacity) || 0;
+  g.style.transition = 'opacity .12s';
+  g.style.opacity    = Math.min(1, prev + .2);
+  setTimeout(() => { g.style.transition = 'opacity 1.4s ease'; updateStarGlow(); }, 140);
+}
+
+/* ── Drawer ── */
+let drawerOpen = false;
+function toggleDrawer() {
+  drawerOpen = !drawerOpen;
+  document.getElementById('drawer').classList.toggle('open', drawerOpen);
+}
+
+/* ── Whale modal ── */
+function openModal()  { document.getElementById('wmodal').classList.add('show'); }
+function closeModal() { document.getElementById('wmodal').classList.remove('show'); }
+document.getElementById('wmodal').addEventListener('click', e => {
+  if (e.target === document.getElementById('wmodal')) closeModal();
+});
+
+/* ── Star panning (stars mode) ── */
+let panX=0, panY=0, sc=1, dragging=false, sx,sy,spx,spy, pd0=1, sc0=1;
+const phone = document.getElementById('phone');
+phone.addEventListener('mousedown', e => {
+  if (currentMode !== 'stars' || drawerOpen) return;
+  dragging=true; sx=e.clientX; sy=e.clientY; spx=panX; spy=panY;
+});
+window.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  panX=spx+(e.clientX-sx); panY=spy+(e.clientY-sy);
+  applyPan();
+});
+window.addEventListener('mouseup', () => dragging=false);
+phone.addEventListener('wheel', e => {
+  if (currentMode!=='stars') return;
+  e.preventDefault();
+  sc = Math.min(3, Math.max(.6, sc - e.deltaY*.0008));
+  applyPan();
+},{passive:false});
+phone.addEventListener('touchstart', e => {
+  if (currentMode!=='stars'||drawerOpen) return;
+  if (e.touches.length===2) {
+    pd0 = Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    sc0 = sc;
+  } else { dragging=true; sx=e.touches[0].clientX; sy=e.touches[0].clientY; spx=panX; spy=panY; }
+},{passive:true});
+phone.addEventListener('touchmove', e => {
+  if (currentMode!=='stars'||drawerOpen) return;
+  if (e.touches.length===2) {
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    sc=Math.min(3,Math.max(.6,sc0*(d/pd0))); applyPan();
+  } else if (dragging) {
+    panX=spx+(e.touches[0].clientX-sx); panY=spy+(e.touches[0].clientY-sy); applyPan();
+  }
+},{passive:true});
+phone.addEventListener('touchend',()=>dragging=false);
+function applyPan(){
+  // bg divs are 3× phone size centered → half-width = 1.5×phone
+  // max pan before edge shows: phone_half × (3sc − 1)
+  const W = phone.offsetWidth;
+  const H = phone.offsetHeight;
+  const maxX = W * (1.5*sc - 0.5);
+  const maxY = H * (1.5*sc - 0.5);
+  panX = Math.max(-maxX, Math.min(maxX, panX));
+  panY = Math.max(-maxY, Math.min(maxY, panY));
+  document.getElementById('stars-pan-layer').style.transform =
+    `translate(${panX}px,${panY}px) scale(${sc})`;
+}
+
+/* ── Home button ── */
+const navToast = document.getElementById('nav-toast');
+let navToastT;
+function goHome() {
+  const btn = document.getElementById('ship-home');
+  // Button press animation
+  btn.style.transition = 'transform .15s';
+  btn.style.transform  = 'scale(.86)';
+  setTimeout(() => { btn.style.transform = ''; btn.style.transition = ''; }, 200);
+
+  // Sparkle
+  const r  = btn.getBoundingClientRect();
+  const pr = document.getElementById('phone').getBoundingClientRect();
+  const cx = r.left - pr.left + r.width  / 2;
+  const cy = r.top  - pr.top  + r.height / 2;
+  for (let i = 0; i < 8; i++) {
+    const s = document.createElement('div');
+    s.className = 'sp';
+    const a = (i / 8) * Math.PI * 2;
+    const d = 26 + Math.random() * 24;
+    s.style.left = cx + 'px';
+    s.style.top  = cy + 'px';
+    s.style.setProperty('--sx', Math.cos(a) * d + 'px');
+    s.style.setProperty('--sy', Math.sin(a) * d + 'px');
+    s.style.background = `hsl(${35 + Math.random()*45},88%,65%)`;
+    document.getElementById('phone').appendChild(s);
+    setTimeout(() => s.remove(), 700);
+  }
+
+  // Toast
+  clearTimeout(navToastT);
+  navToast.textContent = '正在返回主畫面…';
+  navToast.classList.add('show');
+  navToastT = setTimeout(() => {
+    navToast.classList.remove('show');
+    // window.location.href = '../module1_main/index.html';
+  }, 1800);
+}
+
+/* ── 默契動畫 ── */
+function showBondPopup(gain) {
+  const popup = document.getElementById('bond-popup');
+  document.getElementById('bond-gain-text').textContent = '+' + gain;
+  popup.classList.remove('show');
+  void popup.offsetWidth;
+  popup.classList.add('show');
+}
+
+/* ── 儲存新島嶼 ── */
+function saveNewIsland() {
+  const days  = parseInt(document.getElementById('ep-days').value);
+  const title = document.getElementById('ep-title').value.trim();
+  const desc  = document.getElementById('ep-desc').value.trim();
+
+  if (!days || !title) {
+    // 簡單震動提示
+    const panel = document.getElementById('edit-panel');
+    panel.style.transition = 'transform .08s';
+    panel.style.transform = 'translateX(5px)';
+    setTimeout(() => { panel.style.transform = 'translateX(-5px)'; }, 80);
+    setTimeout(() => { panel.style.transform = ''; panel.style.transition = ''; }, 160);
+    return;
+  }
+
+  // 插入新島嶼並按天數由小到大排序
+  const newIsland = { days, theme:'新紀錄', img:null, imgPos:'center center', title, desc };
+  islands.pop(); // 移除末尾的空白島嶼
+  islands.push(newIsland);
+  islands.sort((a, b) => a.days - b.days);
+  islands.push({ blank: true }); // 空白島嶼永遠在最右
+
+  // 重建島嶼列表
+  islandsEl.innerHTML = '';
+  islands.forEach((isl, i) => {
+    const btn = document.createElement('button');
+    btn.className = isl.blank ? 'isl add-isl' : 'isl';
+    btn.innerHTML = isl.blank
+      ? `<img src="./assets/icon_island.png" alt="新增" style="width:43px;opacity:.55;filter:drop-shadow(0 6px 14px rgba(0,0,0,.22))">
+         <span class="isl-label">＋</span>`
+      : `<img src="./assets/icon_island.png" alt="${isl.theme}" style="width:43px">
+         <span class="isl-label">${isl.days}</span>`;
+    btn.onclick = () => selectIsland(i);
+    islandsEl.appendChild(btn);
+  });
+
+  // 跳到新建的島嶼（找出排序後的位置）
+  const newIdx = islands.indexOf(newIsland);
+  selectIsland(newIdx);
+
+  // 增加50默契並顯示動畫
+  showBondPopup(50);
+}
+
+/* ── 小鯨魚對話氣泡 ── */
+const bubbleHints = [
+  { text:'🎉 一週年快樂！365 天的航程值得好好記下來。', hint:'點我看更多' },
+  { text:'💝 七夕還有 86 天，手寫情書準備好了嗎？',   hint:'點我看提醒' },
+  { text:'⚓ 距離第 500 天還剩 135 天，一起計畫慶祝吧！', hint:'點我看提醒' },
+  { text:'✦ 有新的回憶想記錄？滑到最右邊的小島吧。',  hint:'點我開啟' },
+];
+let bubbleIdx = 0;
+const bubbleEl = document.getElementById('whale-bubble');
+
+function showBubble() {
+  if (currentMode !== 'map') return;   // 星空模式不彈
+  const h = bubbleHints[bubbleIdx % bubbleHints.length];
+  bubbleIdx++;
+  bubbleEl.innerHTML = h.text + `<span class="wb-hint">👆 ${h.hint}</span>`;
+  bubbleEl.classList.add('show');
+  // 4 秒後自動收起
+  setTimeout(() => bubbleEl.classList.remove('show'), 4000);
+}
+
+// 第一次：進頁 3 秒後出現；之後每 12 秒輪播一次
+setTimeout(() => {
+  showBubble();
+  setInterval(showBubble, 12000);
+}, 3000);
+
+/* ── Init ── */
+renderGoals();
+selectIsland(BLANK_IDX - 1); // 預設開啟最後一個有內容的島（一周年）
+setMode('map');
+</script>
+</body>
+</html>

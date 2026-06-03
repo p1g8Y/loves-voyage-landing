@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>愛之航 · 航海日誌</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600&family=Playfair+Display:ital,wght@0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:#a8d4e8;
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;
+  font-family:'Noto Serif TC',serif;
+}
+
+/* ── Phone ── */
+#phone{
+  position:relative;
+  width:min(390px,100vw);
+  height:min(844px,calc(100vw * 16/9));
+  max-height:100vh;
+  border-radius:40px;
+  overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.1);
+}
+
+/* ── Ocean BG ── */
+#bg{
+  position:absolute;inset:0;
+  background:url('./assets/bg_ocean_blur.png') center/cover no-repeat;
+  transform:scale(1.04);
+  filter:brightness(.85) saturate(.9);
+}
+
+/* ═══════════════════════════════════
+   TOP BAR
+═══════════════════════════════════ */
+#topbar{
+  position:absolute;top:0;left:0;right:0;
+  display:flex;align-items:flex-start;justify-content:space-between;
+  padding:12px 13px 0;z-index:20;
+}
+.hanging-sign{
+  display:flex;flex-direction:column;align-items:flex-start;
+}
+.sign-img-wrap{
+  position:relative;
+  display:inline-block;
+}
+.ship-name-plate{
+  position:absolute;
+  left:60px;
+  top:50%;
+  transform:translateY(-50%);
+  font-family:'Noto Serif TC',serif;
+  font-size:.6rem;
+  color:#fde8b0;
+  letter-spacing:.1em;
+  text-shadow:0 1px 3px rgba(0,0,0,.6);
+  white-space:nowrap;
+  pointer-events:none;
+  max-width:56px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.hanging-sign-img{
+  height:70px;object-fit:contain;
+  filter:drop-shadow(0 5px 12px rgba(0,0,0,.35));
+}
+.hanging-sign-css{
+  display:none;flex-direction:column;align-items:flex-start;
+  filter:drop-shadow(0 5px 12px rgba(0,0,0,.35));
+}
+.sign-rods{display:flex;gap:40px;padding:0 11px;}
+.sign-rod{width:3px;height:10px;background:linear-gradient(180deg,#4a280a,#c07840,#4a280a);border-radius:2px;}
+.sign-body{display:flex;align-items:center;}
+.medallion{
+  width:56px;height:56px;border-radius:50%;
+  background:radial-gradient(circle at 36% 33%,#e0b860 0%,#9a6028 55%,#5c3010 100%);
+  border:3.5px solid #3d1e06;
+  box-shadow:0 4px 12px rgba(0,0,0,.45),inset 0 2px 4px rgba(255,220,100,.3);
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+  position:relative;z-index:1;flex-shrink:0;
+}
+.medallion::before{content:'';position:absolute;inset:6px;border-radius:50%;border:1.5px solid rgba(255,220,100,.4);}
+.plaque{
+  background:linear-gradient(180deg,#d4a050 0%,#9a5e28 45%,#c09040 100%);
+  border:2.5px solid #3d1e06;border-left:none;border-radius:0 10px 10px 0;
+  padding:5px 14px 5px 16px;margin-left:-6px;
+  box-shadow:3px 4px 10px rgba(0,0,0,.32),inset 0 1.5px rgba(255,255,255,.18);
+  display:flex;align-items:center;min-width:88px;
+}
+.plaque-text{font-size:.72rem;color:#fde8b0;letter-spacing:.12em;text-shadow:0 1px 3px rgba(0,0,0,.55);white-space:nowrap;}
+.coin-display{
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.32));margin-top:8px;
+}
+.coin-img-wrap{
+  position:relative;
+  display:inline-block;
+}
+.coin-bar-img{
+  height:48px;
+  width:auto;
+  object-fit:contain;
+  display:block;
+}
+.coin-num-overlay{
+  position:absolute;
+  right:15px;top:50%;
+  transform:translateY(-50%);
+  font-family:'Noto Serif TC',serif;
+  font-size:.88rem;color:#5a2e0a;font-weight:700;letter-spacing:.04em;
+  pointer-events:none;
+  text-shadow:0 1px 3px rgba(255,255,255,.6);
+}
+.coin-fallback{
+  display:none;align-items:center;
+  background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(248,238,215,.92));
+  border:1.5px solid rgba(255,255,255,.95);border-radius:99px;
+  padding:5px 13px;gap:5px;box-shadow:2px 3px 8px rgba(0,0,0,.2);
+}
+.coin-fallback .cn{font-size:.82rem;color:#5a2e0a;font-weight:700;}
+.coin-fallback .cl{font-size:.6rem;color:#8a5820;letter-spacing:.05em;}
+
+/* ═══════════════════════════════════
+   PARCHMENT CARD  (compact height)
+═══════════════════════════════════ */
+#parchment{
+  position:absolute;
+  top:84px;left:10px;right:10px;bottom:48px;
+  background:
+    url('./assets/bg_parchment.png') center/cover no-repeat,
+    linear-gradient(160deg,#fef4e0 0%,#f2dca0 40%,#e8cc88 100%);
+  background-blend-mode:soft-light;
+  border-radius:20px;
+  border:1.5px solid rgba(200,165,90,.45);
+  box-shadow:0 14px 40px rgba(0,0,0,.28),inset 0 0 50px rgba(150,100,30,.07);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+
+/* ── Day nav arrows ── */
+.day-arrow{
+  position:absolute;
+  top:50%;transform:translateY(-50%);
+  z-index:25;
+  width:28px;height:28px;
+  background:rgba(255,248,225,.72);
+  border:1.5px solid rgba(180,130,55,.35);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  box-shadow:0 3px 10px rgba(0,0,0,.18);
+  backdrop-filter:blur(4px);
+  transition:background .15s,transform .15s;
+  font-size:.9rem;color:#7a4e18;
+  user-select:none;
+  /* vertically centered in the parchment zone (top:84px bottom:48px) */
+  top:calc(84px + (100% - 84px - 48px) / 2);
+}
+.day-arrow:hover{background:rgba(230,190,90,.72);}
+.day-arrow:active{background:rgba(200,150,50,.85);}
+#arrow-prev{left:2px;}
+#arrow-next{right:2px;}
+#arrow-next.hidden,#arrow-prev.hidden{display:none;}
+
+/* ── Botanical corner ── */
+.bot{position:absolute;pointer-events:none;opacity:.22;}
+.bot.tl{top:4px;left:4px;}
+.bot.tr{top:4px;right:4px;transform:scaleX(-1);}
+.bot.bl{bottom:4px;left:4px;transform:scaleY(-1);}
+.bot.br{bottom:4px;right:4px;transform:scale(-1,-1);}
+
+/* ── Scroll inner ── */
+#inner{
+  flex:1;overflow-y:hidden;padding:8px 14px 62px;
+  scrollbar-width:none;
+  display:flex;flex-direction:column;align-items:center;
+}
+#inner::-webkit-scrollbar{display:none;}
+
+/* ── Date header ── */
+.date-hd{text-align:center;margin-bottom:6px;}
+.date-day{
+  font-family:'Playfair Display',serif;
+  font-size:1.25rem;color:#4a3010;letter-spacing:.04em;line-height:1;
+}
+.date-rule{
+  text-align:center;
+  margin:4px 0 0;
+}
+.date-rule::before,.date-rule::after{content:none;}
+.date-rule span{font-size:.65rem;color:rgba(110,75,25,.55);letter-spacing:.15em;}
+.date-rule span{font-size:.65rem;color:rgba(110,75,25,.55);letter-spacing:.2em;}
+
+/* ═══════════════════════════════════
+   MOOD SECTION  (long-press drag)
+═══════════════════════════════════ */
+.mood-section{
+  width:100%;display:flex;justify-content:center;gap:22px;
+  margin-bottom:6px;
+}
+.mood-col{display:flex;flex-direction:column;align-items:center;gap:2px;}
+
+.mood-ring{
+  width:66px;height:66px;border-radius:50%;
+  background:rgba(255,250,232,.55);
+  border:2.5px dashed rgba(110,75,25,.3);
+  box-shadow:0 0 0 4px rgba(255,248,230,.4),0 0 0 6px rgba(110,75,25,.07),0 5px 14px rgba(0,0,0,.1);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  position:relative;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s;
+  font-size:.62rem;color:rgba(110,75,25,.45);letter-spacing:.04em;
+  user-select:none;-webkit-user-select:none;
+  touch-action:none;
+}
+.mood-ring::before{content:'';position:absolute;inset:7px;border-radius:50%;border:1.5px solid rgba(110,75,25,.15);}
+.mood-ring.picked{
+  border-style:solid;border-color:rgba(180,120,40,.55);
+  box-shadow:0 0 0 4px rgba(255,240,180,.5),0 0 0 6px rgba(180,120,40,.1),0 5px 18px rgba(0,0,0,.12);
+}
+.mood-ring .mood-img{width:42px;height:42px;object-fit:contain;pointer-events:none;}
+.mood-ring .mood-emoji{font-size:2rem;line-height:1;pointer-events:none;}
+.mood-ring .mood-placeholder{font-size:.58rem;color:rgba(110,75,25,.45);letter-spacing:.03em;text-align:center;line-height:1.3;pointer-events:none;}
+
+.mood-lbl{font-size:.6rem;color:#8a6430;letter-spacing:.08em;}
+.mood-hint{font-size:.52rem;color:rgba(110,75,25,.4);letter-spacing:.04em;}
+/* 對方心情圓圈：唯讀樣式 */
+.mood-ring.readonly{cursor:default;opacity:.72;border-style:solid;border-color:rgba(110,75,25,.18);}
+.mood-ring.readonly::after{content:'🔒';position:absolute;bottom:1px;right:1px;font-size:.5rem;line-height:1;}
+
+/* ═══════════════════════════════════
+   MOOD PICKER POPUP
+═══════════════════════════════════ */
+#mood-picker{
+  position:absolute;
+  background:rgba(255,252,238,.97);
+  border:1.5px solid rgba(160,110,40,.3);
+  border-radius:18px;
+  padding:8px 10px 10px;
+  box-shadow:0 12px 32px rgba(0,0,0,.2),0 2px 8px rgba(0,0,0,.1);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  z-index:60;
+  opacity:0;pointer-events:none;
+  transform:scale(.82) translateY(8px);
+  transition:opacity .18s,transform .22s cubic-bezier(.34,1.56,.64,1);
+}
+#mood-picker.show{opacity:1;pointer-events:all;transform:scale(1) translateY(0);}
+.mp-title{font-size:.58rem;color:rgba(110,75,25,.5);letter-spacing:.12em;}
+.mp-row{display:flex;gap:6px;}
+.mp-opt{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 7px;border-radius:12px;
+  cursor:pointer;
+  transition:background .15s,transform .15s;
+  touch-action:none;
+}
+.mp-opt img{width:40px;height:40px;object-fit:contain;pointer-events:none;}
+.mp-opt span{font-size:.58rem;color:#7a5020;pointer-events:none;}
+.mp-opt.hl{background:rgba(180,120,40,.18);transform:scale(1.14);}
+.mp-opt:hover{background:rgba(180,120,40,.12);}
+
+/* ── Daily Event divider ── */
+.event-divider{
+  width:100%;display:flex;align-items:center;gap:7px;
+  margin:0 0 6px;
+}
+.event-divider .line{flex:1;height:1px;background:rgba(110,75,25,.22);}
+.event-divider span{font-size:.68rem;color:#7a5830;letter-spacing:.18em;white-space:nowrap;}
+.event-divider .star{color:rgba(110,75,25,.4);font-size:.68rem;}
+
+/* ── Whale trigger row ── */
+.whale-row{
+  width:100%;display:flex;align-items:center;gap:8px;
+  margin-bottom:6px;
+}
+.whale-ask-btn{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(200,230,255,.45);
+  border:1px solid rgba(80,140,200,.3);border-radius:99px;
+  padding:4px 12px 4px 6px;cursor:pointer;
+  transition:transform .2s,background .2s;
+  font-size:.68rem;color:#3a6888;letter-spacing:.07em;
+}
+.whale-ask-btn img{width:30px;height:30px;object-fit:contain;flex-shrink:0;}
+.whale-ask-btn:hover{background:rgba(180,215,255,.55);transform:scale(1.02);}
+.whale-ask-btn:active{transform:scale(.95);}
+
+/* 對方文字框：唯讀樣式 */
+.jtextarea.readonly{
+  background:rgba(235,225,200,.38);
+  color:rgba(60,36,8,.72);
+  cursor:default;
+  border-color:rgba(130,90,30,.14);
+  pointer-events:none;
+  user-select:none;
+  transition:none;
+}
+.jtextarea.readonly:focus{
+  border-color:rgba(130,90,30,.14);
+  box-shadow:none;
+}
+/* ── Journal text boxes ── */
+.jbox{width:100%;margin-bottom:10px;flex:1 1 0;min-height:0;display:flex;flex-direction:column;}
+.jbox-label{
+  display:flex;align-items:center;gap:5px;
+  font-size:.62rem;color:#8a6430;letter-spacing:.12em;margin-bottom:3px;
+}
+.jbox-label::before{content:'✦';font-size:.5rem;color:rgba(130,90,40,.5);}
+.jtextarea{
+  width:100%;
+  background:rgba(255,250,230,.55);
+  border:1.5px solid rgba(130,90,30,.22);
+  border-radius:12px;
+  padding:7px 11px;
+  font-family:'Noto Serif TC',serif;
+  font-size:.78rem;color:#3c2408;line-height:1.6;
+  resize:none;outline:none;
+  flex:1;min-height:0;
+  transition:border-color .2s,box-shadow .2s;
+}
+.jtextarea:focus{border-color:rgba(130,90,30,.5);box-shadow:0 0 0 3px rgba(180,130,60,.12);}
+.jtextarea::placeholder{color:#b89870;}
+.jtextarea.partner-area{background:rgba(245,235,210,.48);}
+.jtextarea.my-area{}
+.char-count{text-align:right;font-size:.56rem;color:#a07850;margin-top:2px;}
+
+/* ── Submit button ── */
+.submit-area{
+  position:absolute;bottom:-15px;left:0;right:0;
+  display:flex;justify-content:center;
+}
+.submit-btn{
+  background:transparent;border:none;cursor:pointer;padding:0;
+  transition:transform .18s cubic-bezier(.34,1.56,.64,1),filter .15s;
+}
+.submit-btn img{width:112px;object-fit:contain;filter:drop-shadow(0 5px 14px rgba(180,90,40,.3));}
+.submit-btn:active{transform:scale(.91);filter:brightness(.84);}
+.submit-css{
+  display:none;
+  background:linear-gradient(135deg,#d48048,#a85020);
+  border:2px solid rgba(255,220,160,.5);border-radius:20px;
+  padding:10px 32px;color:#fde8c0;font-size:.86rem;letter-spacing:.14em;
+  box-shadow:0 6px 18px rgba(180,80,40,.3);cursor:pointer;
+  font-family:'Noto Serif TC',serif;transition:transform .15s;
+}
+.submit-css:active{transform:scale(.93);}
+
+/* ── Success overlay ── */
+#success{
+  position:absolute;inset:0;border-radius:40px;
+  background:radial-gradient(ellipse at 50% 40%,rgba(255,250,225,.96),rgba(248,230,165,.92));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  opacity:0;pointer-events:none;transition:opacity .4s;z-index:50;
+}
+#success.show{opacity:1;pointer-events:all;}
+.suc-icon{font-size:3.5rem;animation:popIn .5s cubic-bezier(.34,1.56,.64,1);}
+.suc-msg{font-size:.95rem;color:#5a3e20;font-style:italic;letter-spacing:.08em;}
+.suc-sub{font-size:.7rem;color:#8a6a40;letter-spacing:.12em;}
+@keyframes popIn{0%{transform:scale(0) rotate(-20deg);}100%{transform:scale(1);}}
+
+/* ── 默契繩結增加動畫 ── */
+#bond-popup{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  z-index:80;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  pointer-events:none;
+  opacity:0;
+  transition:none;
+  background:rgba(255,255,255,.5);
+  border-radius:24px;
+  padding:18px 28px 14px;
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+}
+#bond-popup.show{
+  animation:bondPop .6s cubic-bezier(.34,1.56,.64,1) forwards, bondFade 2.8s ease forwards;
+}
+@keyframes bondPop{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(0) rotate(-10deg);}
+  60%{opacity:1;transform:translate(-50%,-65%) scale(1.12) rotate(3deg);}
+  100%{opacity:1;transform:translate(-50%,-65%) scale(1) rotate(0deg);}
+}
+@keyframes bondFade{
+  0%,55%{opacity:1;}
+  85%{opacity:0;}
+  100%{opacity:0;}
+}
+.bond-knot{width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(180,100,20,.45));}
+.bond-gain{
+  font-family:'Noto Serif TC',serif;
+  font-size:1.3rem;font-weight:700;
+  color:#c06010;
+  text-shadow:0 2px 8px rgba(255,200,80,.7),0 0 20px rgba(255,180,40,.5);
+  letter-spacing:.06em;
+}
+.bond-label{font-size:.62rem;color:#8a5820;letter-spacing:.14em;}
+
+/* ── 默契數字 bump 動畫 ── */
+@keyframes coinBump{
+  0%{transform:translateY(-50%) scale(1);}
+  40%{transform:translateY(-60%) scale(1.35);}
+  70%{transform:translateY(-50%) scale(.92);}
+  100%{transform:translateY(-50%) scale(1);}
+}
+.coin-num-overlay.bump{animation:coinBump .45s cubic-bezier(.34,1.56,.64,1);}
+
+.par{
+  position:absolute;pointer-events:none;
+  width:7px;height:7px;border-radius:50%;
+  animation:parA .85s ease-out forwards;z-index:60;
+}
+@keyframes parA{
+  0%{opacity:1;transform:translate(0,0) scale(1);}
+  100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(0);}
+}
+
+/* ── 第幾天 + 今天按鈕（定位相對於 #parchment） ── */
+#day-indicator{
+  position:absolute;bottom:14px;left:16px;
+  font-family:'Noto Serif TC',serif;
+  font-size:.72rem;color:rgba(100,65,18,.6);
+  letter-spacing:.1em;
+  z-index:25;
+  pointer-events:none;
+}
+#today-btn{
+  position:absolute;bottom:10px;right:14px;
+  background:rgba(200,155,60,.18);
+  border:1.5px solid rgba(160,110,40,.35);
+  border-radius:99px;
+  padding:4px 13px;
+  font-family:'Noto Serif TC',serif;
+  font-size:.65rem;color:#7a4e18;letter-spacing:.08em;
+  cursor:pointer;z-index:25;
+  transition:background .15s;
+}
+#today-btn:hover{background:rgba(200,155,60,.32);}
+#today-btn:active{background:rgba(180,120,30,.45);}
+#today-btn.hidden{display:none;}
+
+/* ═══════════════════════════════════
+   WHALE Q&A MODAL
+═══════════════════════════════════ */
+#whale-qa-modal{
+  position:absolute;inset:0;
+  background:rgba(28,16,6,.58);
+  backdrop-filter:blur(5px);
+  display:flex;align-items:center;justify-content:center;
+  z-index:70;
+  opacity:0;pointer-events:none;
+  transition:opacity .28s;
+}
+#whale-qa-modal.show{opacity:1;pointer-events:all;}
+#whale-qa-box{
+  width:84%;max-width:308px;
+  background:linear-gradient(160deg,#fef5e2 0%,#f2daaa 100%);
+  border:2px solid rgba(180,130,55,.38);
+  border-radius:24px;
+  padding:18px 18px 16px;
+  box-shadow:0 22px 55px rgba(0,0,0,.38);
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  transform:scale(.88) translateY(24px);
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+}
+#whale-qa-modal.show #whale-qa-box{transform:scale(1) translateY(0);}
+.wqa-whale-icon img{width:56px;height:56px;object-fit:contain;}
+.wqa-whale-icon .wqa-emoji{font-size:2.6rem;}
+.wqa-label{font-size:.6rem;color:rgba(110,75,25,.55);letter-spacing:.15em;}
+.wqa-question{
+  font-size:.88rem;color:#3c2408;
+  text-align:center;line-height:1.65;font-weight:600;
+  padding:0 4px;
+}
+.wqa-textarea{
+  width:100%;
+  background:rgba(255,252,240,.85);
+  border:1.5px solid rgba(130,90,30,.28);
+  border-radius:12px;
+  padding:9px 12px;
+  font-family:'Noto Serif TC',serif;
+  font-size:.82rem;color:#3c2408;line-height:1.65;
+  resize:none;min-height:68px;outline:none;
+  transition:border-color .2s;
+}
+.wqa-textarea:focus{border-color:rgba(130,90,30,.55);}
+.wqa-textarea::placeholder{color:#b89870;}
+.wqa-btns{display:flex;gap:9px;width:100%;}
+.wqa-skip{
+  flex:1;padding:9px;white-space:nowrap;
+  background:rgba(0,0,0,.06);
+  border:1.5px solid rgba(0,0,0,.1);
+  border-radius:12px;color:#8a6430;
+  font-family:'Noto Serif TC',serif;font-size:.78rem;cursor:pointer;
+  transition:background .15s;
+}
+.wqa-skip:hover{background:rgba(0,0,0,.1);}
+.wqa-submit-btn{
+  flex:2;padding:9px;
+  background:linear-gradient(135deg,#c87030,#8a4818);
+  border:none;border-radius:12px;
+  color:#fde8b0;
+  font-family:'Noto Serif TC',serif;font-size:.78rem;cursor:pointer;
+  box-shadow:0 5px 14px rgba(180,80,30,.28);
+  transition:transform .15s,filter .15s;
+}
+.wqa-submit-btn:active{transform:scale(.94);filter:brightness(.9);}
+</style>
+</head>
+<body>
+<div id="phone">
+
+  <div id="bg"></div>
+
+  <!-- Top Bar -->
+  <div id="topbar">
+    <div class="hanging-sign">
+      <div class="sign-img-wrap">
+        <img class="hanging-sign-img"
+             src="./assets/木頭懸掛招牌.png" alt="航海日誌"
+             onerror="this.style.display='none';this.parentElement.nextElementSibling.style.display='flex'">
+        <span class="ship-name-plate">愛的小船</span>
+      </div>
+      <div class="hanging-sign-css">
+        <div class="sign-rods"><div class="sign-rod"></div><div class="sign-rod"></div></div>
+        <div class="sign-body">
+          <div class="medallion">⛵</div>
+          <div class="plaque"><span class="plaque-text">愛的小船</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="coin-display">
+      <div class="coin-img-wrap">
+        <img class="coin-bar-img" src="./assets/默契幣數量顯示欄.png" alt="默契值"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="coin-fallback">
+          <span class="cn">128</span><span class="cl">默契值</span>
+        </div>
+        <span class="coin-num-overlay">128</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Day nav arrows -->
+  <button class="day-arrow" id="arrow-prev" onclick="changeDay(-1)">‹</button>
+  <button class="day-arrow" id="arrow-next" onclick="changeDay(1)">›</button>
+
+  <!-- Parchment Card -->
+  <div id="parchment">
+
+    <!-- Botanical corners -->
+    <svg class="bot tl" width="56" height="56" viewBox="0 0 64 64" fill="none">
+      <path d="M4 60 Q18 22 60 4" stroke="#6a5020" stroke-width="1.5"/>
+      <ellipse cx="26" cy="38" rx="11" ry="6" fill="#7a6030" transform="rotate(-42 26 38)"/>
+      <ellipse cx="40" cy="24" rx="10" ry="5.5" fill="#8a7040" transform="rotate(-58 40 24)"/>
+      <ellipse cx="14" cy="50" rx="9" ry="4.5" fill="#7a6030" transform="rotate(-28 14 50)"/>
+    </svg>
+    <svg class="bot tr" width="56" height="56" viewBox="0 0 64 64" fill="none">
+      <path d="M4 60 Q18 22 60 4" stroke="#6a5020" stroke-width="1.5"/>
+      <ellipse cx="26" cy="38" rx="11" ry="6" fill="#7a6030" transform="rotate(-42 26 38)"/>
+      <ellipse cx="40" cy="24" rx="10" ry="5.5" fill="#8a7040" transform="rotate(-58 40 24)"/>
+    </svg>
+
+    <!-- Scroll content -->
+    <div id="inner">
+
+      <!-- Date Header -->
+      <div class="date-hd">
+        <div class="date-day" id="date-display">June 15th</div>
+        <div class="date-rule">
+          <span id="day-display">Sunday</span>
+        </div>
+      </div>
+
+      <!-- Mood Circles -->
+      <div class="mood-section">
+        <div class="mood-col">
+          <div class="mood-ring" id="ring-me"
+               onpointerdown="mdDown('me',event)"
+               onpointermove="mdMove(event)"
+               onpointerup="mdUp(event)"
+               onpointercancel="mdUp(event)">
+            <div class="mood-placeholder">長按<br>選心情</div>
+          </div>
+          <div class="mood-lbl">· Your Mood ·</div>
+          <div class="mood-hint" id="me-mood-hint">長按拖拉</div>
+        </div>
+        <div class="mood-col">
+          <div class="mood-ring readonly" id="ring-partner">
+            <div class="mood-placeholder">等待<br>夥伴</div>
+          </div>
+          <div class="mood-lbl">· Partner ·</div>
+        </div>
+      </div>
+
+      <!-- Mood Picker Popup -->
+      <div id="mood-picker">
+        <div class="mp-title">選擇今天的心情</div>
+        <div class="mp-row">
+          <div class="mp-opt" data-idx="0">
+            <img src="./assets/開心太陽.png" onerror="this.outerHTML='<span style=font-size:1.8rem>☀️</span>'">
+            <span>開心</span>
+          </div>
+          <div class="mp-opt" data-idx="1">
+            <img src="./assets/平靜白雲.png" onerror="this.outerHTML='<span style=font-size:1.8rem>⛅</span>'">
+            <span>平靜</span>
+          </div>
+          <div class="mp-opt" data-idx="2">
+            <img src="./assets/憂鬱烏雲.png" onerror="this.outerHTML='<span style=font-size:1.8rem>🌧</span>'">
+            <span>憂鬱</span>
+          </div>
+          <div class="mp-opt" data-idx="3">
+            <img src="./assets/生氣雷雲.png" onerror="this.outerHTML='<span style=font-size:1.8rem>⛈</span>'">
+            <span>生氣</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily Event divider -->
+      <div class="event-divider">
+        <div class="line"></div>
+        <span class="star">✦</span>
+        <span>Daily Event</span>
+        <span class="star">✦</span>
+        <div class="line"></div>
+      </div>
+
+      <!-- Whale question trigger -->
+      <div class="whale-row">
+        <button class="whale-ask-btn" onclick="openWhaleQA()">
+          <img src="./assets/小鯨魚.png" alt="🐋"
+               onerror="this.outerHTML='<span style=font-size:1.5rem>🐋</span>'">
+          點擊小鯨魚來一道問題
+        </button>
+      </div>
+
+      <!-- Partner's Answer -->
+      <div class="jbox">
+        <div class="jbox-label">Partner's Answer</div>
+        <textarea class="jtextarea partner-area readonly" id="partner-ans"
+          rows="5" readonly tabindex="-1">今天過得好嗎？想跟你分享一下我今天主要都在處理一些比較瑣碎的日常工作，下午還趁著空檔把房間稍微整理了一下，換了個心情。雖然大部分時間都專注在手邊的事情上，但只要稍微停下來喝口水、喘口氣，腦海裡就會浮現你。今天整體感覺挺充實平靜的，你呢？今天有沒有遇到什麼特別、或者想跟我說的事情？</textarea>
+      </div>
+
+      <!-- Your Response -->
+      <div class="jbox">
+        <div class="jbox-label">Your Response</div>
+        <textarea class="jtextarea my-area" id="my-ans"
+          placeholder="在這裡寫下你的回答…" maxlength="300" rows="5"
+          oninput="updateCC()"></textarea>
+        <div class="char-count"><span id="cc">0</span> / 300</div>
+      </div>
+
+    </div><!-- /inner -->
+
+    <!-- 第幾天 + 今天按鈕 -->
+    <div id="day-indicator">第<span id="day-number">7</span>天</div>
+    <button id="today-btn" class="hidden" onclick="goToToday()">今天</button>
+
+    <!-- Submit (fixed at parchment bottom) -->
+    <div class="submit-area">
+      <button class="submit-btn" onclick="doSubmit()">
+        <img src="./assets/btn_submit.png" alt="送出"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+        <button class="submit-css" onclick="doSubmit()">送出 ✈️</button>
+      </button>
+    </div>
+
+  </div><!-- /parchment -->
+
+  <!-- Success overlay -->
+  <div id="success">
+    <div class="suc-icon">💌</div>
+    <div class="suc-msg">日誌已收錄！</div>
+    <div class="suc-sub">繼續航行，船長 ♡</div>
+  </div>
+
+  <!-- 默契繩結增加動畫 -->
+  <div id="bond-popup">
+    <img class="bond-knot" src="./assets/默契繩結.png" alt="默契繩結">
+    <div class="bond-gain" id="bond-gain-text">+20</div>
+    <div class="bond-label">默契值提升</div>
+  </div>
+
+  <!-- Whale Q&A Modal -->
+  <div id="whale-qa-modal" onclick="onQAModalBg(event)">
+    <div id="whale-qa-box">
+      <div class="wqa-whale-icon">
+        <img src="./assets/小鯨魚.png" alt="🐋">
+      </div>
+
+      <!-- 確認畫面 -->
+      <div id="wqa-confirm">
+        <div class="wqa-label">✦ 小鯨魚想確認一下 ✦</div>
+        <div class="wqa-question" style="font-size:.82rem;font-weight:400;">你今天沒有什麼特別的事情<br>要和對方分享嗎？</div>
+        <div class="wqa-btns">
+          <button class="wqa-skip" onclick="closeWhaleQA()">我有事要分享</button>
+          <button class="wqa-submit-btn" onclick="confirmNoShare()">今天沒什麼特別的</button>
+        </div>
+      </div>
+
+      <!-- 問題畫面 -->
+      <div id="wqa-main" style="display:none;width:100%;display:none;flex-direction:column;align-items:center;gap:10px;">
+        <div class="wqa-label">✦ 小鯨魚今日提問 ✦</div>
+        <div class="wqa-question" id="wqa-question">今天最感謝對方的一件事是什麼？</div>
+        <textarea class="wqa-textarea" id="wqa-answer"
+                  placeholder="寫下你的回答…" maxlength="150"></textarea>
+        <div class="wqa-btns">
+          <button class="wqa-skip" onclick="closeWhaleQA()">跳過</button>
+          <button class="wqa-submit-btn" onclick="submitWhaleQA()">送出回答</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /phone -->
+
+<script>
+  // ── Date display & day navigation ──
+  const months = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
+  const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+  // dayOffset: 0 = 今天, -1 = 昨天, -2 = 前天…
+  let dayOffset = 0;
+
+  // 各天的日誌資料（offset → { partnerAns, partnerMoodIdx, myAns, myMoodIdx }）
+  // moodIdx: 0=開心 1=平靜 2=憂鬱 3=生氣
+  const journalData = {
+    0: {
+      partnerAns: '今天過得好嗎？想跟你分享一下我今天主要都在處理一些比較瑣碎的日常工作，下午還趁著空檔把房間稍微整理了一下，換了個心情。雖然大部分時間都專注在手邊的事情上，但只要稍微停下來喝口水、喘口氣，腦海裡就會浮現你。今天整體感覺挺充實平靜的，你呢？今天有沒有遇到什麼特別、或者想跟我說的事情？',
+      partnerMoodIdx: 1,
+      myAns: '', myMoodIdx: null,
+    },
+    '-1': {
+      partnerAns: '今天忙完之後，我故意繞了平時比較少走的那條巷子散步回家，結果意外發現了一間看起來很有質感的獨立小店。裡面點著很舒服的木質調香氛，還擺了一些很有巧思的生活小物。我當下在裡面逛得很開心，但心裡冒出的第一個念頭其實是：「如果是你來，一定也會喜歡這裡的氛圍。」我已經默默把它加進我們下次見面的清單裡了。今天算是個充滿驚喜的微型探險，你呢？今天有沒有發生什麼特別的新鮮事想跟我說？',
+      partnerMoodIdx: 0,
+      myAns: '欸欸！我今天做了一件超衝動的事！逛街的時候看到一個超級奇葩但又很酷的小東西，不知道哪根筋不對就買下來了！現在拿回家擺在桌上，越看越覺得自己很好笑，但我就是控制不住我的手啊！下次見面的時候拿給你看，你絕對不准笑我買廢物喔！今天是一個充滿挑戰精神的一天，換你說，你今天過得如何？有做什麼瘋狂的小事嗎？',
+      myMoodIdx: 0,
+    },
+    '-2': {
+      partnerAns: '嘿，今天一切還順利嗎？今天在通勤的路上，耳機的歌單隨機播放到一首我以前很喜歡、但好一陣子沒聽的老歌。聽著那熟悉的旋律，看著車窗外的街景，突然覺得心情變得好平靜，腦海裡也自動浮現我們之前一起出去散步的畫面。這種不期而遇的懷舊感真的很奇妙，讓這平凡的一天多了點暖意。你今天有沒有遇到什麼讓你心情突然變好的小瞬間？好想聽你分享。',
+      partnerMoodIdx: 1,
+      myAns: '終於忙完啦！今天真的是像打仗一樣，各種突發狀況一直來，我現在整個人呈現一個電量剩1%的狀態。不過，雖然身體超級累，但只要想到快要可以見到你，就覺得好像還可以再撐一下。現在腦袋罷工了什麼都不想管，只想整個人賴在你身上當一塊會呼吸的肉。你今天也辛苦啦，有沒有好好放鬆一下？',
+      myMoodIdx: 2,
+    },
+    '-3': {
+      partnerAns: '今天過得好嗎？我晚上心血來潮，跟著網路上的教學影片試做了一道新菜。老實說，最後成品的賣相跟影片裡差滿多的，裝盤起來甚至有點好笑，但吃了一口發現味道竟然意外地還不錯！吃著吃著就忍不住想，下次見面的時候，也想親手做一次給你吃吃看，雖然可能要委屈你先當一下試吃員了。今天算是個有小小成就感的一天，你呢？今天晚餐吃了什麼好吃的嗎？',
+      partnerMoodIdx: 0,
+      myAns: '今天過得好嗎？我今天在路上看到一隻胖柴犬，超級固執，死都不肯跟著主人走，整張臉擠成一團麻糬，我在旁邊憋笑憋得超痛苦！不知道為什麼，看著那隻胖狗突然就想到你（這絕對是稱讚喔！），可能是覺得那種傲嬌又可愛的感覺有點像吧哈哈哈。今天算是被這隻狗療癒到了，你今天有遇到什麼好玩的小插曲嗎？',
+      myMoodIdx: 0,
+    },
+    '-4': {
+      partnerAns: '晚安，今天過得好嗎？我今天其實沒有安排什麼特別的行程，就是刻意放慢腳步，窩在沙發上看了一部之前一直想看但沒時間看的電影。劇情滿平淡的，但我反而很享受這種什麼都不用多想的放鬆感。看著看著，思緒放空的時候，突然就好想聽聽你的聲音。發現生活裡無論是充實還是這種平淡的時刻，都還是最想和你一起分享。你今天的心情座標在哪裡呢？有沒有什麼想跟我說的？',
+      partnerMoodIdx: 1,
+      myAns: '報告！今天算是個有驚無險的一天。下午處理事情的時候，電腦突然給我大當機，我真的差點把鍵盤砸了，心臟漏跳好幾拍！幸好最後資料有救回來，不然我現在應該在角落畫圈圈哭泣。經歷這種驚嚇之後，現在覺得能安安靜靜地躺在床上跟你傳訊息，簡直是天堂。你今天有被什麼事情氣到或嚇到嗎？需要我幫你一起罵嗎？哈哈！',
+      myMoodIdx: 1,
+    },
+    '-5': {
+      partnerAns: '忙到現在終於有空喘口氣啦！跟你說，我今天做了一件有點小蠢的事。去超市買東西，結帳時才發現忘記帶環保袋，只好雙手抱著一堆蘋果和日常用品走回家，手超級酸！不過走回來的路上，剛好看到今天的夕陽特別漂亮，橘紅色的天空好溫柔，當下馬上拍了下來想說晚點給你看。雖然有點小手忙腳亂，但心情還是滿好的。你的今天過得怎麼樣？有沒有什麼有趣或煩心的小插曲想跟我分享？',
+      partnerMoodIdx: 0,
+      myAns: '欸跟你說！我今天中午去吃了一家新開的店，那個招牌菜真的好吃到不可思議，我咬下去第一口就在心裡尖叫！當下腦袋裡閃過的第一個念頭就是：這絕對是你的菜！我不管，我已經單方面決定了，下次約會絕對要拖你來吃，你不來都不行！我今天算是被美食徹底拯救了，你呢？今天有沒有吃飽吃好？',
+      myMoodIdx: 0,
+    },
+    '-6': {
+      partnerAns: '嘿，你那邊天氣好嗎？今天下午出門辦點事的時候，突然遇到一場超大的午後陣雨，我只好趕快躲進路邊的一間小咖啡廳。在那裡發呆聽雨聲的時候，點了一杯熱拿鐵，味道意外地非常順口。看著窗外滴滴答答的，心裡突然覺得，如果這時候你也在身邊，我們一起安靜地看著雨景，感覺一定更棒。今天算是一個意外獲得寧靜的下午，你呢？今天一切都還順利嗎？',
+      partnerMoodIdx: 1,
+      myAns: '呼！今天終於結束啦！我今天下班跑去運動，本來想說要耍個帥挑戰極限，結果才動沒多久就喘得跟狗一樣，超糗的！不過流滿身汗的感覺真的很爽，覺得把今天的鳥事都跟著汗水蒸發掉了。回來的路上經過萬惡的鹹酥雞攤，那個香味差點讓我破功，但為了下次見面能讓你看起來順眼一點，我死命忍住了！快誇獎我！你今天過得怎樣？有沒有遇到什麼好笑的事？',
+      myMoodIdx: 0,
+    },
+  };
+
+  /* ═══ renderDay ═══ */
+  function renderDay() {
+    const d = new Date();
+    d.setDate(d.getDate() + dayOffset);
+    const dn = d.getDate();
+    const sfx = [,'st','nd','rd'][dn % 10] || 'th';
+    document.getElementById('date-display').textContent = months[d.getMonth()] + ' ' + dn + sfx;
+    document.getElementById('day-display').textContent  = days[d.getDay()];
+
+    // 箭頭：到底/到頂時隱藏
+    document.getElementById('arrow-next').classList.toggle('hidden', dayOffset === 0);
+    document.getElementById('arrow-prev').classList.toggle('hidden', dayOffset === MIN_DAY);
+
+    // 第幾天 & 今天按鈕
+    document.getElementById('day-number').textContent = dayOffset - MIN_DAY + 1;
+    document.getElementById('today-btn').classList.toggle('hidden', dayOffset === 0);
+
+    // 取資料
+    const data = journalData[String(dayOffset)] || journalData[dayOffset] || { partnerAns:'', partnerMoodIdx:null, myAns:'', myMoodIdx:null };
+
+    // 對方回答
+    document.getElementById('partner-ans').value = data.partnerAns || '';
+    if (data.partnerMoodIdx !== null && data.partnerMoodIdx !== undefined) {
+      applyMood('partner', data.partnerMoodIdx);
+    } else {
+      moodState.partner = null;
+      const rp = document.getElementById('ring-partner');
+      rp.innerHTML = '<div class="mood-placeholder">等待<br>夥伴</div>';
+      rp.classList.remove('picked');
+    }
+
+    const isToday = dayOffset === 0;
+    const myAnsEl = document.getElementById('my-ans');
+
+    // 玩家對話框
+    myAnsEl.readOnly = !isToday;
+    myAnsEl.classList.toggle('readonly', !isToday);
+
+    // 歷史頁：隱藏小鯨魚、送出、字數、長按提示；鎖定我的心情圈游標
+    document.querySelector('.submit-area').style.display  = isToday ? '' : 'none';
+    document.querySelector('.whale-row').style.display    = isToday ? '' : 'none';
+    document.querySelector('.char-count').style.display   = isToday ? '' : 'none';
+    document.getElementById('me-mood-hint').style.display = isToday ? '' : 'none';
+    const ringMe = document.getElementById('ring-me');
+    ringMe.style.cursor = isToday ? '' : 'default';
+
+    if (!isToday) {
+      myAnsEl.value = data.myAns || '';
+      if (data.myMoodIdx !== null && data.myMoodIdx !== undefined) {
+        applyMood('me', data.myMoodIdx);
+      } else {
+        moodState.me = null;
+        const rm = document.getElementById('ring-me');
+        rm.innerHTML = '<div class="mood-placeholder">長按<br>選心情</div>';
+        rm.classList.remove('picked');
+      }
+    } else {
+      myAnsEl.value = '';
+      updateCC();
+      moodState.me = null;
+      const rm = document.getElementById('ring-me');
+      rm.innerHTML = '<div class="mood-placeholder">長按<br>選心情</div>';
+      rm.classList.remove('picked');
+    }
+  }
+
+  const MIN_DAY = -6; // 最早有紀錄的那天
+
+  function goToToday() {
+    dayOffset = 0;
+    renderDay();
+  }
+
+  function changeDay(delta) {
+    const next = dayOffset + delta;
+    if (next > 0 || next < MIN_DAY) return;
+    dayOffset = next;
+    renderDay();
+  }
+
+  /* ═══════════════════════════════════
+     MOOD — long-press drag picker
+  ═══════════════════════════════════ */
+  const MOODS = [
+    { img:'開心太陽.png', label:'開心', emoji:'☀️' },
+    { img:'平靜白雲.png', label:'平靜', emoji:'⛅' },
+    { img:'憂鬱烏雲.png', label:'憂鬱', emoji:'🌧' },
+    { img:'生氣雷雲.png', label:'生氣', emoji:'⛈' },
+  ];
+
+  const moodState = { me: null, partner: null };
+  let lpTimer = null, lpActive = false, lpWho = null, lpHl = -1;
+  const picker = document.getElementById('mood-picker');
+  const mpOpts = picker.querySelectorAll('.mp-opt');
+
+  function mdDown(who, e) {
+    if (dayOffset !== 0) return; // 歷史頁不能改心情
+    e.currentTarget.setPointerCapture(e.pointerId);
+    lpWho = who; lpActive = false; lpHl = -1;
+    lpTimer = setTimeout(() => {
+      lpActive = true;
+      positionPicker(who);
+      picker.classList.add('show');
+      if (navigator.vibrate) navigator.vibrate(12);
+    }, 380);
+  }
+
+  function mdMove(e) {
+    if (!lpActive) return;
+    const r = picker.getBoundingClientRect();
+    const pr = document.getElementById('phone').getBoundingClientRect();
+    const cx = e.clientX, cy = e.clientY;
+    let best = -1, bestD = 999;
+    mpOpts.forEach((o, i) => {
+      const or = o.getBoundingClientRect();
+      const d = Math.hypot(cx - (or.left + or.width/2), cy - (or.top + or.height/2));
+      if (d < bestD) { bestD = d; best = i; }
+    });
+    if (best !== lpHl) {
+      mpOpts.forEach(o => o.classList.remove('hl'));
+      if (best >= 0) mpOpts[best].classList.add('hl');
+      lpHl = best;
+    }
+  }
+
+  function mdUp(e) {
+    clearTimeout(lpTimer);
+    if (lpActive) {
+      picker.classList.remove('show');
+      mpOpts.forEach(o => o.classList.remove('hl'));
+      if (lpHl >= 0) applyMood(lpWho, lpHl);
+    }
+    lpActive = false; lpHl = -1;
+  }
+
+  // Also allow direct tap on mp-opt (for mouse/desktop)
+  mpOpts.forEach(o => {
+    o.addEventListener('click', () => {
+      if (lpWho) { applyMood(lpWho, parseInt(o.dataset.idx)); picker.classList.remove('show'); }
+    });
+  });
+
+  function positionPicker(who) {
+    const ring = document.getElementById('ring-' + who);
+    const rr = ring.getBoundingClientRect();
+    const pr = document.getElementById('phone').getBoundingClientRect();
+    const top  = Math.max(8, rr.top - pr.top - 110);
+    const left = Math.max(8, rr.left - pr.left - 60);
+    picker.style.top  = top  + 'px';
+    picker.style.left = left + 'px';
+  }
+
+  function applyMood(who, idx) {
+    const m = MOODS[idx];
+    moodState[who] = idx;
+    const ring = document.getElementById('ring-' + who);
+    ring.classList.add('picked');
+    ring.innerHTML = `<img class="mood-img" src="./assets/${m.img}"
+      onerror="this.outerHTML='<span class=mood-emoji>${m.emoji}</span>'">`;
+  }
+
+  /* ═══════════════════════════════════
+     WHALE Q&A
+  ═══════════════════════════════════ */
+  const Qs = [
+    '今天最感謝對方的一件事是什麼？',
+    '如果今天的心情是一種天氣，你覺得是哪種？',
+    '什麼事讓你覺得你們越來越有默契？',
+    '今天你最想對對方做的一件溫柔的事？',
+    '如果今天是旅程中的某片海域，是什麼感覺？',
+    '有什麼還沒說出口的話嗎？',
+    '一件想和對方一起完成的事是什麼？',
+  ];
+
+  let currentQ = '';
+
+  function openWhaleQA() {
+    const myAns = document.getElementById('my-ans');
+    if (myAns.value.trim()) {
+      myAns.style.boxShadow = '0 0 0 3px rgba(180,130,60,.35)';
+      myAns.scrollIntoView({ behavior:'smooth', block:'center' });
+      setTimeout(() => myAns.style.boxShadow = '', 1000);
+      return;
+    }
+    document.getElementById('wqa-confirm').style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;';
+    document.getElementById('wqa-main').style.display = 'none';
+    document.getElementById('whale-qa-modal').classList.add('show');
+  }
+
+  function confirmNoShare() {
+    currentQ = Qs[Math.floor(Math.random() * Qs.length)];
+    document.getElementById('wqa-question').textContent = currentQ;
+    document.getElementById('wqa-answer').value = '';
+    document.getElementById('wqa-confirm').style.display = 'none';
+    document.getElementById('wqa-main').style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;';
+    setTimeout(() => document.getElementById('wqa-answer').focus(), 200);
+  }
+
+  function submitWhaleQA() {
+    const answer = document.getElementById('wqa-answer').value.trim();
+    if (!answer) {
+      const ta = document.getElementById('wqa-answer');
+      ta.style.borderColor = 'rgba(200,80,40,.55)';
+      setTimeout(() => ta.style.borderColor = '', 700);
+      return;
+    }
+    const myAns = document.getElementById('my-ans');
+    const existing = myAns.value.trim();
+    const entry = `問：${currentQ}\n答：${answer}`;
+    myAns.value = existing ? existing + '\n\n' + entry : entry;
+    updateCC();
+    closeWhaleQA();
+    setTimeout(() => myAns.scrollIntoView({ behavior:'smooth', block:'center' }), 200);
+  }
+
+  function closeWhaleQA() {
+    document.getElementById('whale-qa-modal').classList.remove('show');
+  }
+
+  function onQAModalBg(e) {
+    if (e.target === document.getElementById('whale-qa-modal')) closeWhaleQA();
+  }
+
+  /* ── Char count ── */
+  function updateCC() {
+    document.getElementById('cc').textContent =
+      document.getElementById('my-ans').value.length;
+  }
+
+  /* ═══════════════════════════════════
+     默契值系統
+  ═══════════════════════════════════ */
+  let coinValue = 128;
+  const todayKey = 'journalSubmitDate_' + new Date().toDateString();
+  let submittedToday = sessionStorage.getItem(todayKey) === '1';
+
+  function updateCoinDisplay(val) {
+    document.querySelector('.coin-num-overlay').textContent = val;
+    document.querySelector('.coin-fallback .cn').textContent = val;
+  }
+
+  function animateCoinBump() {
+    const el = document.querySelector('.coin-num-overlay');
+    el.classList.remove('bump');
+    void el.offsetWidth;
+    el.classList.add('bump');
+    el.addEventListener('animationend', () => el.classList.remove('bump'), { once: true });
+  }
+
+  function showBondPopup(gain) {
+    const popup = document.getElementById('bond-popup');
+    document.getElementById('bond-gain-text').textContent = '+' + gain;
+    popup.classList.remove('show');
+    void popup.offsetWidth;
+    popup.classList.add('show');
+  }
+
+  function animateCoinCount(from, to) {
+    const dur = 600, steps = 20;
+    let step = 0;
+    const interval = setInterval(() => {
+      step++;
+      updateCoinDisplay(Math.round(from + (to - from) * (step / steps)));
+      if (step >= steps) { clearInterval(interval); updateCoinDisplay(to); }
+    }, dur / steps);
+  }
+
+  /* ── Submit ── */
+  const suc = document.getElementById('success');
+  function doSubmit() {
+    const ta = document.getElementById('my-ans');
+    if (!ta.value.trim() && moodState.me === null) {
+      ta.style.borderColor = 'rgba(200,80,40,.5)';
+      setTimeout(() => ta.style.borderColor = '', 800);
+      return;
+    }
+    const gain = submittedToday ? 5 : 20;
+    const newCoin = coinValue + gain;
+    spawnParticles();
+    suc.classList.add('show');
+    setTimeout(() => {
+      suc.classList.remove('show');
+      showBondPopup(gain);
+      animateCoinBump();
+      animateCoinCount(coinValue, newCoin);
+      coinValue = newCoin;
+      submittedToday = true;
+      sessionStorage.setItem(todayKey, '1');
+      document.getElementById('partner-ans').value = '今天過得好嗎？想跟你分享一下我今天主要都在處理一些比較瑣碎的日常工作，下午還趁著空檔把房間稍微整理了一下，換了個心情。雖然大部分時間都專注在手邊的事情上，但只要稍微停下來喝口水、喘口氣，腦海裡就會浮現你。今天整體感覺挺充實平靜的，你呢？今天有沒有遇到什麼特別、或者想跟我說的事情？';
+      applyMood('partner', 1);
+    }, 1000);
+  }
+
+  function spawnParticles() {
+    const btn = document.querySelector('.submit-area');
+    const r   = btn.getBoundingClientRect();
+    const pr  = document.getElementById('phone').getBoundingClientRect();
+    const cx  = r.left - pr.left + r.width / 2;
+    const cy  = r.top  - pr.top  + r.height / 2;
+    const cols = ['#ffd98a','#ff9a7a','#c3e0ff','#ffc2db','#a8edca'];
+    for (let i = 0; i < 12; i++) {
+      const p = document.createElement('div');
+      p.className = 'par';
+      const a = (i / 12) * Math.PI * 2, dv = 38 + Math.random() * 38;
+      p.style.left = cx + 'px'; p.style.top = cy + 'px';
+      p.style.setProperty('--dx', Math.cos(a) * dv + 'px');
+      p.style.setProperty('--dy', Math.sin(a) * dv + 'px');
+      p.style.background = cols[i % cols.length];
+      document.getElementById('phone').appendChild(p);
+      setTimeout(() => p.remove(), 850);
+    }
+  }
+
+  // ── 初始化 ──
+  renderDay();
+
+</script>
+</body>
+</html>
