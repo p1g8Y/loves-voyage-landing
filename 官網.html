@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>愛之航 Love's Voyage — 封測招募</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* ── BASE ── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Noto Serif TC', serif;
+      overflow-x: hidden;
+      margin: 0;
+      color: #fff;
+      background: #06040f;
+    }
+    .font-display { font-family: 'Playfair Display', serif; }
+
+    /* ── FLUID TYPE ── */
+    h1 { font-size: clamp(1.6rem, 5vw, 3.2rem); line-height: 1.25; }
+    h2 { font-size: clamp(1.3rem, 3.5vw, 2rem); }
+    h3 { font-size: clamp(1.05rem, 2.5vw, 1.4rem); }
+    p  { font-size: clamp(.85rem, 1.6vw, 1rem); }
+
+    /* ── FULL-PAGE GRADIENT WRAPPER ── */
+    #page-wrapper {
+      background: linear-gradient(
+        to bottom,
+        transparent   0%,
+        #7ab8d4      12%,
+        #3a7898      25%,
+        #184864      40%,
+        #0e3350      52%,
+        #09223a      65%,
+        #040c1b      82%,
+        #06040f     100%
+      );
+      min-height: 100vh;
+    }
+
+    /* ── HERO BG ── */
+    #hero {
+      position: relative;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(80px,12vw,140px) 1.5rem clamp(60px,10vw,120px);
+      overflow: hidden;
+    }
+    #hero-bg {
+      position: absolute; inset: 0;
+      background: url('圖/主畫面背景.jpg') center top / cover no-repeat;
+      filter: brightness(.55) saturate(.85);
+      z-index: 0;
+    }
+    /* subtle vignette */
+    #hero::after {
+      content:''; position:absolute; inset:0; z-index:1;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(6,4,15,.7) 100%);
+    }
+    #hero > * { position: relative; z-index: 2; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes shipBob {
+      0%,100% { transform: translateY(0) rotate(-1deg); }
+      50%      { transform: translateY(-16px) rotate(1deg); }
+    }
+    .ship-bob { animation: shipBob 4.2s ease-in-out infinite; }
+
+    @keyframes floatA {
+      0%,100% { transform: translateY(0) rotate(var(--r,0deg)); }
+      50%      { transform: translateY(-10px) rotate(var(--r,0deg)); }
+    }
+    @keyframes floatB {
+      0%,100% { transform: translateY(0) rotate(var(--r,0deg)); }
+      50%      { transform: translateY(8px) rotate(var(--r,0deg)); }
+    }
+    @keyframes spinSlow {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    @keyframes pulseGlow {
+      0%,100% { box-shadow: 0 0 0 0 rgba(254,244,224,.6), 0 0 0 0 rgba(254,244,224,.3); transform:scale(1); }
+      50%      { box-shadow: 0 0 0 12px rgba(254,244,224,.12), 0 0 0 24px rgba(254,244,224,.05); transform:scale(1.07); }
+    }
+    .play-pulse { animation: pulseGlow 2.6s ease-in-out infinite; }
+
+    @keyframes bounceCue {
+      0%,100% { transform: translateX(-50%) translateY(0); }
+      50%      { transform: translateX(-50%) translateY(10px); }
+    }
+    #scroll-cue {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      z-index: 900; opacity: 1; transition: opacity .5s;
+      animation: bounceCue 2s ease-in-out infinite; pointer-events: none;
+    }
+    #scroll-cue.cue-hidden { opacity: 0; }
+
+    @keyframes twinkle {
+      0%,100% { opacity: .18; transform: scale(.7); }
+      50%      { opacity: 1;   transform: scale(1.3); }
+    }
+    .star {
+      position: absolute; border-radius: 50%; background: #fff;
+      animation: twinkle var(--d,3s) ease-in-out infinite var(--dl,0s);
+    }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal {
+      opacity: 0; transform: translateY(48px);
+      transition: opacity .75s ease-out, transform .75s ease-out;
+    }
+    .reveal.on { opacity:1; transform:translateY(0); }
+
+    /* ── MODULE CARD ── */
+    .module-card {
+      background: rgba(255,255,255,.058);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 1.5rem;
+      overflow: hidden;
+      transition: transform .3s ease, box-shadow .3s ease;
+    }
+    .module-card:hover { transform: translateY(-6px); box-shadow: 0 24px 60px rgba(0,0,0,.4); }
+
+    /* ── UI COLLAGE CONTAINER ── */
+    .collage {
+      position: relative; width: 100%; overflow: hidden;
+      aspect-ratio: 16/10;
+      cursor: pointer;
+    }
+    .collage-bg {
+      position: absolute; inset: 0; background-size: cover; background-position: center;
+    }
+    /* phone mockup wrapper */
+    .phone-wrap {
+      position: absolute;
+      filter: drop-shadow(0 12px 32px rgba(0,0,0,.55));
+    }
+    .phone-wrap img { width: 100%; height: auto; border-radius: 8%; display: block; }
+    /* floating ui elements */
+    .ui-float {
+      position: absolute;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,.5));
+      pointer-events: none;
+    }
+    .ui-float img { width: 100%; height: auto; display: block; }
+
+    /* play button */
+    .play-btn-wrap {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 20;
+    }
+    .play-btn {
+      width: clamp(52px,8vw,80px); aspect-ratio:1;
+      border-radius: 50%;
+      background: rgba(255,255,255,.22);
+      border: 2px solid rgba(255,255,255,.6);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s, transform .2s;
+    }
+    .collage:hover .play-btn { background: rgba(255,255,255,.38); transform: scale(1.1); }
+
+    /* cta label */
+    .cta-label {
+      position: absolute; bottom: clamp(8px,2vw,16px); left: 50%; transform: translateX(-50%);
+      white-space: nowrap; z-index: 20;
+      background: rgba(0,0,0,.48); backdrop-filter: blur(4px);
+      color: rgba(255,255,255,.9); font-size: clamp(.7rem,1.4vw,.85rem);
+      padding: .35rem clamp(.6rem,1.5vw,1rem); border-radius: 999px;
+    }
+
+    /* ── SOFT HOOK ── */
+    .soft-hook {
+      max-height: 0; overflow: hidden; opacity: 0;
+      transition: max-height .65s cubic-bezier(.4,0,.2,1), opacity .5s ease;
+    }
+    .soft-hook.open { max-height: 340px; opacity: 1; }
+
+    /* ── INPUTS & BUTTONS ── */
+    .email-input {
+      background: rgba(255,255,255,.09); border: 1.5px solid rgba(255,255,255,.24);
+      color: #fff; border-radius: .75rem; padding: .75rem 1.2rem;
+      font-size: clamp(.8rem,1.5vw,.9rem); outline: none; width: 100%;
+      transition: border-color .2s, box-shadow .2s;
+      font-family: 'Noto Serif TC', serif;
+    }
+    .email-input::placeholder { color: rgba(255,255,255,.38); }
+    .email-input:focus { border-color: #fef4e0; box-shadow: 0 0 0 3px rgba(254,244,224,.18); }
+    .email-input.invalid { border-color: #e85d4a; }
+
+    .cta-btn {
+      background: linear-gradient(135deg,#fef4e0,#f0d060); color: #2a3d1a;
+      font-weight: 700; cursor: pointer; border: none;
+      font-size: clamp(.8rem,1.5vw,.95rem);
+      transition: transform .2s, box-shadow .2s;
+      font-family: 'Noto Serif TC', serif;
+    }
+    .cta-btn:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 12px 28px rgba(254,220,80,.4); }
+    .cta-btn:disabled { background: linear-gradient(135deg,#4ade80,#16a34a); color:#fff; transform:none; box-shadow:none; }
+
+    .ghost-btn {
+      background: none; border: none; color: rgba(255,255,255,.4);
+      font-size: clamp(.7rem,1.3vw,.8rem); cursor: pointer; padding: .3rem 0;
+      transition: color .2s; font-family: 'Noto Serif TC', serif;
+    }
+    .ghost-btn:hover { color: rgba(255,255,255,.75); }
+
+    /* ── MODAL ── */
+    #play-modal {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      align-items: center; justify-content: center;
+      background: rgba(0,0,0,.93); backdrop-filter: blur(6px);
+      opacity: 0; transition: opacity .3s ease;
+    }
+    #play-modal.modal-show   { display: flex; }
+    #play-modal.modal-fadein { opacity: 1; }
+
+    /* phone frame in modal */
+    .modal-phone {
+      position: relative; width: min(390px, 88vw);
+      aspect-ratio: 390/844;
+      transition: aspect-ratio .3s ease;
+    }
+    .modal-phone.compact { aspect-ratio: 390/660; }
+    .modal-phone::before {
+      content:''; position:absolute; inset:0; border-radius:40px;
+      border:2px solid rgba(255,255,255,.12); z-index:3; pointer-events:none;
+    }
+
+    /* ── FOOTER ── */
+    #hero-footer {
+      position: relative; overflow: hidden;
+      min-height: 100svh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: clamp(60px,10vw,120px) 1.5rem;
+    }
+    #footer-bg {
+      position: absolute; inset: 0;
+      background: url('圖/星空背景.png') center center / cover no-repeat;
+      filter: brightness(.45) saturate(.7);
+      z-index: 0;
+    }
+    #hero-footer > * { position: relative; z-index: 2; }
+    #stars-container { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; }
+
+    /* ── RWD HELPERS ── */
+    .container-md { width: 100%; max-width: 760px; margin: 0 auto; padding: 0 1rem; }
+    .section-pad  { padding: clamp(60px,10vw,120px) 1rem; }
+
+    /* Module info text area */
+    .module-info { padding: clamp(1rem,3vw,2rem) clamp(1rem,3vw,2rem); }
+    .module-meta { display:flex; align-items:center; gap:.75rem; margin-bottom:.75rem; flex-wrap:wrap; }
+    .module-meta-num { font-family:'Playfair Display',serif; font-style:italic; font-size:.82rem; color:rgba(254,244,224,.6); }
+    .module-meta-rule { height:1px; width:2rem; background:rgba(254,244,224,.2); }
+    .module-meta-tag  { font-size:.78rem; color:rgba(255,255,255,.4); }
+
+    /* ── HERO ship image ── */
+    #hero-ship  { width: min(400px, 90vw); margin-bottom: clamp(1rem,3vw,1.5rem); }
+
+    /* ── FOOTER PHONE MOCKUP ── */
+    .footer-phone {
+      width: min(200px, 45vw);
+      filter: drop-shadow(0 16px 40px rgba(168,212,232,.3));
+    }
+    @media(min-width:640px) { .footer-phone { width: min(240px, 35vw); } }
+  </style>
+</head>
+<body>
+
+<div id="page-wrapper">
+
+  <!-- ═══════════════════════════ HERO ═══════════════════════════ -->
+  <section id="hero">
+    <div id="hero-bg"></div>
+
+    <!-- 飄浮天氣小圖 (裝飾) -->
+    <img src="圖/開心太陽.png" alt=""
+         class="ui-float" aria-hidden="true"
+         style="width:clamp(40px,6vw,80px);position:absolute;
+                top:12%;left:6%;
+                --r:-12deg;animation:floatA 3.5s ease-in-out infinite;opacity:.75;"/>
+    <img src="圖/平靜白雲.png" alt=""
+         class="ui-float" aria-hidden="true"
+         style="width:clamp(35px,5vw,65px);position:absolute;
+                top:18%;right:8%;
+                --r:8deg;animation:floatB 4s ease-in-out infinite;opacity:.65;"/>
+    <img src="圖/憂鬱烏雲.png" alt=""
+         class="ui-float" aria-hidden="true"
+         style="width:clamp(30px,4vw,55px);position:absolute;
+                top:72%;left:5%;
+                --r:5deg;animation:floatA 5s ease-in-out infinite 1s;opacity:.5;"/>
+
+    <!-- 帆船圖（shipBob） -->
+    <div class="ship-bob">
+      <img id="hero-ship" src="圖/船隻縮圖.png"
+           alt="愛之航帆船"
+           style="filter:drop-shadow(0 12px 32px rgba(0,0,0,.55));"/>
+    </div>
+
+    <!-- 主文案 -->
+    <div style="text-align:center;max-width:min(680px,92vw);margin:0 auto;">
+      <h1 style="font-weight:700;margin-bottom:clamp(.75rem,2vw,1.25rem);
+                 text-shadow:0 2px 20px rgba(0,0,0,.5);">
+        愛情不是一場考試，<br>
+        <span class="font-display" style="font-style:italic;color:#fef4e0;">而是一趟共同進化的</span><br>
+        航海旅程。
+      </h1>
+      <p style="color:rgba(255,255,255,.72);max-width:520px;margin:0 auto clamp(1.5rem,4vw,2.5rem);
+                line-height:1.8;">
+        捨棄高壓的爭吵與說教。在《愛之航》，用最溫暖的 2.5D 手繪世界，
+        陪伴你們紀錄每一次心跳、更新專屬的愛情地圖。
+      </p>
+      <a href="#features" class="cta-btn"
+         style="display:inline-block;padding:.85rem clamp(1.8rem,4vw,3rem);
+                border-radius:999px;font-size:clamp(.9rem,1.8vw,1.1rem);
+                box-shadow:0 8px 28px rgba(245,216,80,.35);">
+        開始探索 ⚓
+      </a>
+      <p class="font-display" style="font-style:italic;margin-top:1rem;
+                font-size:clamp(.75rem,1.3vw,.9rem);color:rgba(255,255,255,.35);">
+        — Closed Beta · Limited Access —
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════ FEATURES ═══════════════════════════ -->
+  <section id="features" class="section-pad">
+    <div class="container-md">
+
+      <!-- 區塊標題 -->
+      <div class="reveal" style="text-align:center;margin-bottom:clamp(2.5rem,6vw,5rem);">
+        <p class="font-display" style="font-style:italic;letter-spacing:.15em;
+                  font-size:clamp(.75rem,1.3vw,.85rem);color:rgba(254,244,224,.5);
+                  margin-bottom:.5rem;">✦  Feature Showcase  ✦</p>
+        <h2 style="font-weight:700;color:rgba(255,255,255,.88);">四大航海裝備，等待你們啟用</h2>
+      </div>
+
+      <!-- ╔══════════════════════════════════════════╗
+           ║  MODULE 1 ─ 主畫面功能介紹 Main Screen   ║
+           ╚══════════════════════════════════════════╝ -->
+      <div class="module-card reveal"
+           style="margin-bottom:clamp(2rem,5vw,4rem);">
+
+        <!-- UI 拼貼展示（點擊開啟主畫面試玩） -->
+        <div class="collage" onclick="openModal(0)"
+             style="aspect-ratio:16/10;background:linear-gradient(135deg,#0d2035,#0a1828,#112238);">
+
+          <!-- 底層：主畫面背景暈染 -->
+          <div class="collage-bg"
+               style="background-image:url('圖/主畫面背景.jpg');
+                      opacity:.3;filter:blur(2px) saturate(.7);"></div>
+
+          <!-- 主手機截圖 -->
+          <div class="phone-wrap"
+               style="width:38%;top:-3%;right:10%;transform:rotate(2deg);">
+            <img src="love-voyage-mvp-v1/mvp版面1.png" alt="主畫面截圖" loading="lazy"/>
+          </div>
+
+          <!-- 小鯨魚（主畫面角色） -->
+          <div class="ui-float"
+               style="width:32%;bottom:4%;left:2%;transform:rotate(-5deg);
+                      --r:-5deg;animation:floatB 4s ease-in-out infinite;">
+            <img src="love-voyage-mvp-v1/playable_teasers/module1_main/assets/小鯨魚.png"
+                 alt="小鯨魚" loading="lazy"/>
+          </div>
+
+          <!-- 航海日誌按鈕（主畫面功能入口） -->
+          <div class="ui-float"
+               style="width:36%;top:6%;left:4%;transform:rotate(-8deg);
+                      --r:-8deg;animation:floatA 5s ease-in-out infinite 0.3s;opacity:.95;">
+            <img src="love-voyage-mvp-v1/playable_teasers/module1_main/assets/btn_journal.png"
+                 alt="航海日誌" loading="lazy"/>
+          </div>
+
+          <!-- 航海地圖按鈕（主畫面功能入口） -->
+          <div class="ui-float"
+               style="width:34%;bottom:18%;right:3%;transform:rotate(7deg);
+                      --r:7deg;animation:floatB 4.2s ease-in-out infinite 0.6s;opacity:.95;">
+            <img src="love-voyage-mvp-v1/playable_teasers/module1_main/assets/btn_map.png"
+                 alt="航海地圖" loading="lazy"/>
+          </div>
+
+
+          <!-- 播放鍵 -->
+          <div class="play-btn-wrap">
+            <div class="play-btn play-pulse">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                <polygon points="5,3 19,12 5,21"/>
+              </svg>
+            </div>
+          </div>
+          <span class="cta-label">🧭 點擊體驗主畫面</span>
+        </div>
+
+        <div class="module-info">
+          <div class="module-meta">
+            <span class="module-meta-num">Module 01</span>
+            <span class="module-meta-rule"></span>
+            <span class="module-meta-tag">Main Screen</span>
+          </div>
+          <h3 style="font-weight:700;color:#fff;margin-bottom:.75rem;">
+            你們的專屬海域，從這裡出發。
+          </h3>
+          <p style="color:rgba(255,255,255,.62);line-height:1.85;">
+            進入《愛之航》，第一眼看見的就是你們共同的帆船與今日默契幣數量。
+            從主畫面可以一鍵開啟航海日誌記錄心情、前往航海地圖探索回憶島嶼、
+            或喚醒小鯨魚查看今日提案。所有功能入口一覽無遺，讓每次開啟都成為你們關係的全新起點。
+          </p>
+        </div>
+
+        <!-- Soft Hook -->
+        <div class="soft-hook" id="soft-hook-0">
+          <div style="padding:clamp(.75rem,2vw,1.5rem) clamp(1rem,3vw,2rem);
+                      background:rgba(255,255,255,.05);border-top:1px solid rgba(255,255,255,.08);">
+            <p style="font-size:clamp(.8rem,1.5vw,.9rem);color:rgba(255,255,255,.82);margin-bottom:.75rem;">
+              💌 意猶未盡嗎？留下信箱，讓小鯨魚在正式啟航時第一時間通知你
+            </p>
+            <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.5rem;">
+              <input type="email" id="hook-email-0" placeholder="your@email.com"
+                     class="email-input" style="min-width:0;flex:1 1 180px;"/>
+              <button class="cta-btn" onclick="submitHook(0)"
+                      style="padding:.75rem 1.2rem;border-radius:.75rem;flex-shrink:0;">
+                通知我 ⛵
+              </button>
+            </div>
+            <button class="ghost-btn" onclick="closeSoftHook(0)">🔭 先去看看其他航海裝備</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ╔══════════════════════════════════════╗
+           ║  MODULE 2 ─ 航海日誌 Daily Journal   ║
+           ╚══════════════════════════════════════╝ -->
+      <div class="module-card reveal" id="module-card-1"
+           style="margin-bottom:clamp(2rem,5vw,4rem);">
+
+        <!-- 縮圖 UI 拼貼 -->
+        <div class="collage" onclick="openModal(1)"
+             style="background:linear-gradient(135deg,#1a3a5c,#0d2238,#1a2a50);">
+
+          <!-- 底層：航海日誌 full screenshot（背景暈染） -->
+          <div class="collage-bg"
+               style="background-image:url('圖/航海日誌.png');
+                      opacity:.18;filter:blur(2px);background-size:cover;"></div>
+
+          <!-- 主手機截圖 -->
+          <div class="phone-wrap"
+               style="width:38%;top:-4%;right:12%;transform:rotate(3deg);">
+            <img src="love-voyage-mvp-v1/mvp版面2.png" alt="航海日誌截圖"
+                 loading="lazy"/>
+          </div>
+
+          <!-- 航海日誌按鈕（浮動） -->
+          <div class="ui-float"
+               style="width:38%;bottom:5%;left:4%;transform:rotate(-5deg);
+                      --r:-5deg;animation:floatB 4s ease-in-out infinite;">
+            <img src="love-voyage-mvp-v1/playable_teasers/module1_main/assets/btn_journal.png"
+                 alt="航海日誌" loading="lazy"/>
+          </div>
+
+          <!-- 送出回答按鈕 -->
+          <div class="ui-float"
+               style="width:22%;bottom:28%;right:5%;transform:rotate(8deg);
+                      --r:8deg;animation:floatA 3.5s ease-in-out infinite 0.5s;">
+            <img src="圖/送出回答.png" alt="" loading="lazy"/>
+          </div>
+
+          <!-- 天氣小圖 -->
+          <div class="ui-float"
+               style="width:12%;top:8%;left:8%;
+                      animation:spinSlow 10s linear infinite;opacity:.9;">
+            <img src="圖/開心太陽.png" alt="" loading="lazy"/>
+          </div>
+          <div class="ui-float"
+               style="width:10%;top:14%;left:22%;
+                      --r:-8deg;animation:floatB 5s ease-in-out infinite 1s;opacity:.8;">
+            <img src="圖/平靜白雲.png" alt="" loading="lazy"/>
+          </div>
+          <div class="ui-float"
+               style="width:9%;top:32%;left:10%;
+                      --r:5deg;animation:floatA 4.5s ease-in-out infinite 0.8s;opacity:.75;">
+            <img src="圖/憂鬱烏雲.png" alt="" loading="lazy"/>
+          </div>
+          <div class="ui-float"
+               style="width:8%;top:28%;left:38%;
+                      --r:-3deg;animation:floatB 3.8s ease-in-out infinite 0.3s;opacity:.7;">
+            <img src="圖/生氣雷雲.png" alt="" loading="lazy"/>
+          </div>
+
+          <!-- 播放鍵 -->
+          <div class="play-btn-wrap">
+            <div class="play-btn play-pulse">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                <polygon points="5,3 19,12 5,21"/>
+              </svg>
+            </div>
+          </div>
+          <span class="cta-label">☁️ 點擊啟航，試寫今天的心情</span>
+        </div>
+
+        <!-- 文字 -->
+        <div class="module-info">
+          <div class="module-meta">
+            <span class="module-meta-num">Module 02</span>
+            <span class="module-meta-rule"></span>
+            <span class="module-meta-tag">Daily Journal</span>
+          </div>
+          <h3 style="font-weight:700;color:#fff;margin-bottom:.75rem;">
+            讓每一次的情緒，都有溫柔的安放之處。
+          </h3>
+          <p style="color:rgba(255,255,255,.62);line-height:1.85;">
+            不知道今天要聊什麼？每天一道專屬問答，從對方喜歡的早餐口味，
+            到面對壓力時的第一個念頭——每一個小答案，都是讓你們更靠近彼此的一塊拼圖。
+            日誌累積越多，你們之間能聊的就越多，了解的也越深。
+          </p>
+        </div>
+
+        <!-- Soft Hook -->
+        <div class="soft-hook" id="soft-hook-1">
+          <div style="padding:clamp(.75rem,2vw,1.5rem) clamp(1rem,3vw,2rem);
+                      background:rgba(255,255,255,.05);border-top:1px solid rgba(255,255,255,.08);">
+            <p style="font-size:clamp(.8rem,1.5vw,.9rem);color:rgba(255,255,255,.82);margin-bottom:.75rem;">
+              💌 意猶未盡嗎？留下信箱，讓小鯨魚在正式啟航時第一時間通知你
+            </p>
+            <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.5rem;">
+              <input type="email" id="hook-email-1" placeholder="your@email.com"
+                     class="email-input" style="min-width:0;flex:1 1 180px;"/>
+              <button class="cta-btn" onclick="submitHook(1)"
+                      style="padding:.75rem 1.2rem;border-radius:.75rem;flex-shrink:0;">
+                通知我 ⛵
+              </button>
+            </div>
+            <button class="ghost-btn" onclick="closeSoftHook(1)">🔭 先去看看其他航海裝備</button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ╔═════════════════════════════════════╗
+           ║  MODULE 3 ─ 地圖與星圖 Map & Stars  ║
+           ╚═════════════════════════════════════╝ -->
+      <div class="module-card reveal" id="module-card-2"
+           style="margin-bottom:clamp(2rem,5vw,4rem);">
+
+        <div class="collage" onclick="openModal(2)"
+             style="background:linear-gradient(135deg,#12103a,#1a0e4a,#0a1028);">
+
+          <!-- 底層：航海地圖暈染 -->
+          <div class="collage-bg"
+               style="background-image:url('圖/航海地圖.png');
+                      opacity:.2;filter:blur(3px);background-size:cover;"></div>
+
+          <!-- 主手機截圖 -->
+          <div class="phone-wrap"
+               style="width:36%;top:-2%;left:10%;transform:rotate(-4deg);">
+            <img src="love-voyage-mvp-v1/mvp版面3.png" alt="航海地圖截圖" loading="lazy"/>
+          </div>
+
+          <!-- 地圖和星盤（放大 1.5x，往左上移） -->
+          <div class="ui-float"
+               style="width:69%;bottom:-8%;right:-10%;transform:rotate(6deg);
+                      --r:6deg;animation:floatB 5s ease-in-out infinite;">
+            <img src="圖/地圖和星盤.png" alt="" loading="lazy"/>
+          </div>
+
+          <!-- 小島縮圖 -->
+          <div class="ui-float"
+               style="width:32%;top:5%;right:8%;transform:rotate(-7deg);
+                      --r:-7deg;animation:floatA 4s ease-in-out infinite 0.6s;">
+            <img src="圖/小島縮圖.png" alt="" loading="lazy"/>
+          </div>
+
+          <div class="play-btn-wrap">
+            <div class="play-btn play-pulse">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                <polygon points="5,3 19,12 5,21"/>
+              </svg>
+            </div>
+          </div>
+          <span class="cta-label">🗺 展開海圖，建立你們的第一座島嶼</span>
+        </div>
+
+        <div class="module-info">
+          <div class="module-meta">
+            <span class="module-meta-num">Module 03</span>
+            <span class="module-meta-rule"></span>
+            <span class="module-meta-tag">Map & Stars</span>
+          </div>
+          <h3 style="font-weight:700;color:#fff;margin-bottom:.75rem;">
+            那些平凡的日常，都是閃閃發光的島嶼。
+          </h3>
+          <p style="color:rgba(255,255,255,.62);line-height:1.85;">
+            從初次牽手的悸動，到每一次互相扶持的低谷。把現實中的回憶化作航道上的一座座島嶼；
+            把對未來的期盼，連線成夜空中的專屬星圖。切換日夜模式，看見你們共同走過的每一段奇蹟。
+          </p>
+        </div>
+
+        <div class="soft-hook" id="soft-hook-2">
+          <div style="padding:clamp(.75rem,2vw,1.5rem) clamp(1rem,3vw,2rem);
+                      background:rgba(255,255,255,.05);border-top:1px solid rgba(255,255,255,.08);">
+            <p style="font-size:clamp(.8rem,1.5vw,.9rem);color:rgba(255,255,255,.82);margin-bottom:.75rem;">
+              💌 意猶未盡嗎？留下信箱，讓小鯨魚在正式啟航時第一時間通知你
+            </p>
+            <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.5rem;">
+              <input type="email" id="hook-email-2" placeholder="your@email.com"
+                     class="email-input" style="min-width:0;flex:1 1 180px;"/>
+              <button class="cta-btn" onclick="submitHook(2)"
+                      style="padding:.75rem 1.2rem;border-radius:.75rem;flex-shrink:0;">
+                通知我 ⛵
+              </button>
+            </div>
+            <button class="ghost-btn" onclick="closeSoftHook(2)">🔭 先去看看其他航海裝備</button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ╔══════════════════════════════════════════╗
+           ║  MODULE 4 ─ 小鯨魚陪伴 Whale Companion  ║
+           ╚══════════════════════════════════════════╝ -->
+      <div class="module-card reveal" id="module-card-3"
+           style="margin-bottom:clamp(2rem,5vw,4rem);">
+
+        <div class="collage" onclick="openModal(3)"
+             style="background:linear-gradient(135deg,#0a2840,#082035,#102844);">
+
+          <!-- 底層：主畫面背景 -->
+          <div class="collage-bg"
+               style="background-image:url('圖/主畫面背景.jpg');
+                      opacity:.25;filter:blur(2px) saturate(.6);"></div>
+
+          <!-- 主手機截圖 -->
+          <div class="phone-wrap"
+               style="width:37%;top:-3%;right:14%;transform:rotate(2deg);">
+            <img src="love-voyage-mvp-v1/mvp版面4.png" alt="小鯨魚截圖" loading="lazy"/>
+          </div>
+
+          <div class="play-btn-wrap">
+            <div class="play-btn play-pulse">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                <polygon points="5,3 19,12 5,21"/>
+              </svg>
+            </div>
+          </div>
+          <span class="cta-label">🐳 喚醒小鯨魚，聽聽牠的專屬提案</span>
+        </div>
+
+        <div class="module-info">
+          <div class="module-meta">
+            <span class="module-meta-num">Module 04</span>
+            <span class="module-meta-rule"></span>
+            <span class="module-meta-tag">Whale Companion</span>
+          </div>
+          <h3 style="font-weight:700;color:#fff;margin-bottom:.75rem;">
+            最懂你們的，除了彼此，還有牠。
+          </h3>
+          <p style="color:rgba(255,255,255,.62);line-height:1.85;">
+            又快到紀念日，卻沒有約會靈感？喚醒你們專屬的白鯨魚夥伴吧！牠不僅會替你們倒數
+            每一個重要日子，還會根據你們累積的問答默契，偷偷游遞最適合你們的「約會與送禮提案」。
+          </p>
+        </div>
+
+        <div class="soft-hook" id="soft-hook-3">
+          <div style="padding:clamp(.75rem,2vw,1.5rem) clamp(1rem,3vw,2rem);
+                      background:rgba(255,255,255,.05);border-top:1px solid rgba(255,255,255,.08);">
+            <p style="font-size:clamp(.8rem,1.5vw,.9rem);color:rgba(255,255,255,.82);margin-bottom:.75rem;">
+              💌 意猶未盡嗎？留下信箱，讓小鯨魚在正式啟航時第一時間通知你
+            </p>
+            <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.5rem;">
+              <input type="email" id="hook-email-3" placeholder="your@email.com"
+                     class="email-input" style="min-width:0;flex:1 1 180px;"/>
+              <button class="cta-btn" onclick="submitHook(3)"
+                      style="padding:.75rem 1.2rem;border-radius:.75rem;flex-shrink:0;">
+                通知我 ⛵
+              </button>
+            </div>
+            <button class="ghost-btn" onclick="closeSoftHook(3)">🔭 先去看看其他航海裝備</button>
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════ HERO FOOTER ════════════════════════ -->
+  <footer id="hero-footer">
+    <div id="footer-bg"></div>
+    <div id="stars-container"></div>
+
+    <!-- 星雲光暈 -->
+    <div aria-hidden="true" style="position:absolute;inset:0;pointer-events:none;z-index:1;">
+      <div style="position:absolute;top:15%;left:15%;width:min(300px,50vw);height:min(300px,50vw);
+                  border-radius:50%;background:rgba(18,38,96,.3);filter:blur(80px);"></div>
+      <div style="position:absolute;bottom:20%;right:18%;width:min(340px,55vw);height:min(340px,55vw);
+                  border-radius:50%;background:rgba(40,8,80,.25);filter:blur(90px);"></div>
+      <!-- 小鯨魚身後的柔光暈 -->
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-80%);
+                  width:min(320px,55vw);height:min(320px,55vw);
+                  border-radius:50%;background:rgba(168,212,232,.12);filter:blur(60px);"></div>
+    </div>
+
+    <!-- 小鯨魚（shipBob + 光暈陰影） -->
+    <div style="position:relative;z-index:2;margin-bottom:clamp(1.2rem,3.5vw,2rem);">
+      <img src="love-voyage-mvp-v1/playable_teasers/module1_main/assets/小鯨魚.png"
+           alt="小鯨魚"
+           class="ship-bob"
+           style="width:min(220px,52vw);height:auto;
+                  filter:drop-shadow(0 0 24px rgba(168,212,232,.55))
+                         drop-shadow(0 16px 40px rgba(168,212,232,.25));"/>
+    </div>
+
+    <!-- 終極文案 -->
+    <div style="position:relative;z-index:2;text-align:center;width:100%;
+                max-width:min(680px,92vw);margin:0 auto;">
+      <p class="font-display" style="font-style:italic;letter-spacing:.14em;
+                font-size:clamp(.72rem,1.3vw,.82rem);color:rgba(254,244,224,.4);
+                margin-bottom:1rem;">✦  Closed Beta · Limited Spots  ✦</p>
+
+      <h2 style="font-weight:700;line-height:1.3;margin-bottom:1rem;
+                 text-shadow:0 0 50px rgba(168,212,232,.22);">
+        準備好，讓愛之航<br>
+        <span class="font-display" style="font-style:italic;color:#fef4e0;">
+          成為你們的日常了嗎？
+        </span>
+      </h2>
+
+      <p style="color:rgba(255,255,255,.5);line-height:1.85;
+                margin-bottom:clamp(1.5rem,4vw,3rem);max-width:460px;margin-left:auto;margin-right:auto;">
+        封測名額限量釋出。留下你們的信箱，<br>
+        讓這隻小鯨魚替你們記住每一次心跳與紀念日。
+      </p>
+
+      <!-- 訂閱表單 -->
+      <div style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+                  border-radius:1.5rem;padding:clamp(1.25rem,4vw,2rem);
+                  max-width:min(440px,92vw);margin:0 auto;backdrop-filter:blur(14px);">
+        <p class="font-display" style="font-style:italic;font-size:clamp(.78rem,1.4vw,.88rem);
+                  color:rgba(254,244,224,.55);margin-bottom:1rem;">— 雙人同行，一起登船 —</p>
+        <input type="email" id="footer-email"
+               placeholder="✉️  輸入你們的信箱" class="email-input"
+               style="margin-bottom:.75rem;font-size:clamp(.85rem,1.6vw,1rem);
+                      padding:.9rem 1.4rem;"/>
+        <button id="footer-submit-btn" class="cta-btn"
+                onclick="submitFooter()"
+                style="width:100%;padding:.9rem;border-radius:1rem;
+                       font-size:clamp(.88rem,1.6vw,1.05rem);">
+          領取雙人專屬船票 ⛵
+        </button>
+        <p style="margin-top:.75rem;font-size:clamp(.68rem,1.2vw,.75rem);
+                  color:rgba(255,255,255,.2);">
+          我們尊重你的隱私。不發垃圾郵件，只送你們的專屬航行通知。
+        </p>
+      </div>
+
+      <!-- 版權 -->
+      <div style="margin-top:clamp(2rem,5vw,4rem);display:flex;align-items:center;
+                  gap:.75rem;justify-content:center;flex-wrap:wrap;
+                  font-size:clamp(.65rem,1.1vw,.75rem);color:rgba(255,255,255,.15);">
+        <span>© 2024 Love's Voyage</span>
+        <span>·</span>
+        <span class="font-display" style="font-style:italic;">Sail Together, Grow Together</span>
+      </div>
+    </div>
+  </footer>
+
+</div><!-- /page-wrapper -->
+
+
+<!-- 固定滾動提示箭頭 -->
+<div id="scroll-cue" aria-hidden="true">
+  <svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="22" cy="22" r="20" fill="rgba(255,255,255,.1)"
+            stroke="rgba(255,255,255,.28)" stroke-width="1.5"/>
+    <path d="M14,18 L22,26 L30,18"
+          stroke="white" stroke-width="2.2" fill="none"
+          stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</div>
+
+
+<!-- ═══════════════════════════ MODAL ═══════════════════════════
+     iframe src 在點擊時才賦值（Lazy Loading）
+     掛載對應 MVP 模組時填入 src：
+       模組 1 → module1_journal.html
+       模組 2 → module2_map.html
+       模組 3 → module3_whale.html
+══════════════════════════════════════════════════════════════ -->
+<div id="play-modal">
+  <button onclick="closeModal()" aria-label="關閉試玩"
+          style="position:absolute;top:16px;right:16px;width:48px;height:48px;
+                 border-radius:50%;background:rgba(255,255,255,.12);
+                 border:1.5px solid rgba(255,255,255,.3);color:#fff;
+                 font-size:1.15rem;cursor:pointer;display:flex;
+                 align-items:center;justify-content:center;
+                 transition:background .2s;z-index:2;">✕</button>
+
+  <div id="modal-label"
+       style="position:absolute;top:22px;left:20px;
+              color:rgba(255,255,255,.42);font-size:.76rem;
+              font-family:'Playfair Display',serif;font-style:italic;"></div>
+
+  <div class="modal-phone">
+    <iframe id="module-iframe" src="" title="試玩模組" allow="accelerometer; autoplay"
+            style="width:100%;height:100%;border:none;border-radius:38px;background:#0d1a2e;"></iframe>
+    <div id="iframe-placeholder"
+         style="position:absolute;inset:0;border-radius:38px;
+                background:linear-gradient(160deg,#1a2e4a,#0d1a2e);
+                display:flex;flex-direction:column;align-items:center;
+                justify-content:center;color:rgba(255,255,255,.42);">
+      <div class="ship-bob" style="font-size:3rem;margin-bottom:1rem;">⛵</div>
+      <p style="font-family:'Playfair Display',serif;font-style:italic;font-size:.88rem;">
+        試玩模組即將啟航...
+      </p>
+      <p style="font-size:.7rem;margin-top:.4rem;color:rgba(255,255,255,.2);">MVP 模組掛載區</p>
+    </div>
+  </div>
+
+  <p style="position:absolute;bottom:14px;
+            color:rgba(255,255,255,.2);font-size:.7rem;">
+    點擊右上角 ✕ 或按 ESC 離開
+  </p>
+</div>
+
+
+<!-- ═════════════════════════ JAVASCRIPT ════════════════════════ -->
+<script>
+/* 0. 星星生成 */
+(function(){
+  var c=document.getElementById('stars-container');
+  for(var i=0;i<160;i++){
+    var el=document.createElement('div'); el.className='star';
+    var s=(Math.random()*2.8+0.4).toFixed(1);
+    var x=(Math.random()*100).toFixed(2), y=(Math.random()*100).toFixed(2);
+    var d=(Math.random()*4+1.8).toFixed(1), dl=(Math.random()*8).toFixed(1);
+    el.style.cssText='width:'+s+'px;height:'+s+'px;left:'+x+'%;top:'+y+'%;--d:'+d+'s;--dl:'+dl+'s;';
+    c.appendChild(el);
+  }
+})();
+
+/* 1. Scroll Reveal */
+var ro=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){
+    if(e.isIntersecting){e.target.classList.add('on');ro.unobserve(e.target);}
+  });
+},{threshold:0.1,rootMargin:'0px 0px -32px 0px'});
+document.querySelectorAll('.reveal').forEach(function(el){ro.observe(el);});
+
+/* 2. Scroll Cue */
+var cue=document.getElementById('scroll-cue');
+var fo=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){cue.classList.toggle('cue-hidden',e.isIntersecting);});
+},{threshold:0.05});
+fo.observe(document.getElementById('hero-footer'));
+
+/* 3. Module info */
+var MODULE={
+  0:{label:'Module 01 · 主畫面 Main Screen',        src:'love-voyage-mvp-v1/playable_teasers/module1_main/module1_main.html'},
+  1:{label:'Module 02 · 航海日誌 Daily Journal',    src:'love-voyage-mvp-v1/playable_teasers/module2_journal/module2_journal.html'},
+  2:{label:'Module 03 · 地圖與星圖 Map & Stars',    src:'love-voyage-mvp-v1/playable_teasers/module3_map_stars/module3_map_stars.html'},
+  3:{label:'Module 04 · 小鯨魚陪伴 Whale Companion',src:'love-voyage-mvp-v1/playable_teasers/module4_whale/module4_whale.html'}
+};
+var activeId=null;
+var modal=document.getElementById('play-modal');
+var iframe=document.getElementById('module-iframe');
+var placeholder=document.getElementById('iframe-placeholder');
+var mlabel=document.getElementById('modal-label');
+
+/* 4. Open Modal */
+var modalPhone=document.querySelector('.modal-phone');
+function openModal(id){
+  activeId=id;
+  mlabel.textContent=MODULE[id].label;
+  if(MODULE[id].src){iframe.src=MODULE[id].src;placeholder.style.display='none';}
+  else{iframe.src='';placeholder.style.display='flex';}
+  /* module 4（小鯨魚）用較短的 phone frame */
+  if(id===3){modalPhone.classList.add('compact');}
+  else{modalPhone.classList.remove('compact');}
+  modal.classList.add('modal-show');
+  requestAnimationFrame(function(){requestAnimationFrame(function(){
+    modal.classList.add('modal-fadein');
+  });});
+  document.body.style.overflow='hidden';
+  cue.classList.add('cue-hidden');
+}
+
+/* 5. Close Modal */
+function closeModal(){
+  modal.classList.remove('modal-fadein');
+  setTimeout(function(){modal.classList.remove('modal-show');iframe.src='';},300);
+  modalPhone.classList.remove('compact');
+  document.body.style.overflow='';
+  if(activeId!==null&&activeId<=3) openSoftHook(activeId);
+  activeId=null;
+}
+modal.addEventListener('click',function(e){if(e.target===modal)closeModal();});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&modal.classList.contains('modal-show'))closeModal();
+});
+
+/* 6. Soft Hook */
+function openSoftHook(id){
+  var h=document.getElementById('soft-hook-'+id);
+  if(!h)return;
+  setTimeout(function(){
+    h.classList.add('open');
+    h.scrollIntoView({behavior:'smooth',block:'nearest'});
+  },360);
+}
+function closeSoftHook(id){
+  var h=document.getElementById('soft-hook-'+id);
+  if(h)h.classList.remove('open');
+}
+
+/* 7. Submit Hook */
+function submitHook(id){
+  var inp=document.getElementById('hook-email-'+id);
+  var btn=inp?inp.nextElementSibling:null;
+  if(!inp||!btn)return;
+  if(!validEmail(inp.value.trim())){flashBad(inp);return;}
+  console.log('[Hook '+id+']',inp.value.trim());
+  setOK(btn,inp,'✓ 已收到！啟航時通知你');
+}
+
+/* 8. Submit Footer */
+function submitFooter(){
+  var inp=document.getElementById('footer-email');
+  var btn=document.getElementById('footer-submit-btn');
+  if(!inp||!btn)return;
+  if(!validEmail(inp.value.trim())){flashBad(inp);return;}
+  console.log('[Footer]',inp.value.trim());
+  setOK(btn,inp,'✓ 船票已送出！小鯨魚會通知你 🐳');
+}
+
+/* helpers */
+function validEmail(e){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);}
+function flashBad(inp){
+  inp.classList.add('invalid');
+  var p=inp.placeholder; inp.placeholder='請輸入有效的 Email';
+  setTimeout(function(){inp.classList.remove('invalid');inp.placeholder=p;},2200);
+}
+function setOK(btn,inp,msg){btn.textContent=msg;btn.disabled=true;if(inp)inp.disabled=true;}
+
+/* 9. Smooth anchor */
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click',function(e){
+    e.preventDefault();
+    var t=document.querySelector(a.getAttribute('href'));
+    if(t)t.scrollIntoView({behavior:'smooth'});
+  });
+});
+</script>
+</body>
+</html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
