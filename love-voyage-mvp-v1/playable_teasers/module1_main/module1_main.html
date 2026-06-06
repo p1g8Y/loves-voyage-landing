@@ -28,7 +28,7 @@ body{
 /* ── Ocean BG ── */
 #bg{
   position:absolute;inset:0;
-  background:url('./assets/bg_ocean.png') center/cover no-repeat;
+  background:url('../../shared_assets/bg_ocean.png') center/cover no-repeat;
   transform:scale(1.19);
   transform-origin:center;
   will-change:transform;
@@ -270,7 +270,7 @@ body{
     <div class="hanging-sign">
       <div class="sign-img-wrap">
         <img class="hanging-sign-img"
-             src="./assets/木頭懸掛招牌.png"
+             src="../../shared_assets/木頭懸掛招牌.png"
              alt="愛之航"
              onerror="this.style.display='none';this.parentElement.nextElementSibling.style.display='flex'">
         <span class="ship-name-plate">愛的小船</span>
@@ -288,7 +288,7 @@ body{
     <!-- Right: coin display (image) -->
     <div class="coin-display">
       <div class="coin-img-wrap">
-        <img class="coin-bar-img" src="./assets/默契幣數量顯示欄.png" alt="默契值"
+        <img class="coin-bar-img" src="../../shared_assets/默契幣數量顯示欄.png" alt="默契值"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
         <div class="coin-fallback">
           <span class="cn">128</span><span class="cl">默契值</span>
@@ -300,7 +300,7 @@ body{
 
   <!-- ── Central Sailboat ── -->
   <div id="ship-wrap">
-    <img id="ship-img" src="./assets/sailboat.png" alt="帆船"
+    <img id="ship-img" src="../../shared_assets/船隻縮圖.png" alt="帆船"
          onerror="this.outerHTML='<div style=font-size:10rem;text-align:center;filter:drop-shadow(0 12px 24px rgba(0,0,0,.2))>⛵</div>'">
   </div>
 
@@ -315,7 +315,7 @@ body{
 
   <!-- Whale (bottom-center) -->
   <button class="stk" id="stk-whale" onclick="go(this,'喚醒小鯨魚夥伴…')">
-    <img src="./assets/小鯨魚.png" alt="小鯨魚"
+    <img src="../../shared_assets/小鯨魚.png" alt="小鯨魚"
          onerror="this.outerHTML='<span style=font-size:3.2rem;filter:drop-shadow(0 6px 12px rgba(0,0,0,.2))>🐋</span>'">
     <span class="whale-bar">小鯨魚</span>
   </button>

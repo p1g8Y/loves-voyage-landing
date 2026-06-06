@@ -694,7 +694,7 @@ body{
 
   <!-- Whale (top-right) -->
   <button id="whale-btn" onclick="openModal()">
-    <img id="whale-img" src="./assets/小鯨魚.png" alt="🐋">
+    <img id="whale-img" src="../../shared_assets/小鯨魚.png" alt="🐋">
   </button>
   <!-- 鯨魚對話氣泡 -->
   <div id="whale-bubble" onclick="openModal()"></div>
@@ -746,7 +746,7 @@ body{
 
     <!-- Ship thumbnail — Home Button -->
     <button id="ship-home" onclick="goHome()" title="回首頁">
-      <img src="./assets/船隻縮圖.png" alt="回首頁"
+      <img src="../../shared_assets/船隻縮圖.png" alt="回首頁"
            onerror="this.src='./assets/ship_sticker.png'">
       <span class="home-label">⚓ 回首頁</span>
     </button>
@@ -773,7 +773,7 @@ body{
 
   <!-- 默契繩結增加動畫 -->
   <div id="bond-popup">
-    <img class="bond-knot" src="./assets/默契繩結.png" alt="默契繩結">
+    <img class="bond-knot" src="../../shared_assets/默契繩結.png" alt="默契繩結">
     <div class="bond-gain" id="bond-gain-text">+50</div>
     <div class="bond-label">默契值提升</div>
   </div>
@@ -785,7 +785,7 @@ body{
   <div id="wmodal">
     <div id="wmodal-box">
       <div id="wmodal-header">
-        <img src="./assets/小鯨魚.png" alt="小鯨魚">
+        <img src="../../shared_assets/小鯨魚.png" alt="小鯨魚">
         <h3>小鯨魚想說⋯</h3>
       </div>
       <div class="fcard">
@@ -998,7 +998,7 @@ function setMode(mode) {
   document.getElementById('stars-content').style.pointerEvents = isStars ? 'all' : 'none';
 
   // Swap whale image per mode
-  document.getElementById('whale-img').src = './assets/小鯨魚.png';
+  document.getElementById('whale-img').src = '../../shared_assets/小鯨魚.png';
 
   if (isStars) updateStarGlow();
 }

@@ -130,7 +130,7 @@ body{
   position:absolute;
   top:84px;left:10px;right:10px;bottom:48px;
   background:
-    url('./assets/bg_parchment.png') center/cover no-repeat,
+    url('../../module1_main/assets/btn_journal.png') center/cover no-repeat,
     linear-gradient(160deg,#fef4e0 0%,#f2dca0 40%,#e8cc88 100%);
   background-blend-mode:soft-light;
   border-radius:20px;
@@ -521,7 +521,7 @@ body{
     <div class="hanging-sign">
       <div class="sign-img-wrap">
         <img class="hanging-sign-img"
-             src="./assets/木頭懸掛招牌.png" alt="航海日誌"
+             src="../../shared_assets/木頭懸掛招牌.png" alt="航海日誌"
              onerror="this.style.display='none';this.parentElement.nextElementSibling.style.display='flex'">
         <span class="ship-name-plate">愛的小船</span>
       </div>
@@ -535,7 +535,7 @@ body{
     </div>
     <div class="coin-display">
       <div class="coin-img-wrap">
-        <img class="coin-bar-img" src="./assets/默契幣數量顯示欄.png" alt="默契值"
+        <img class="coin-bar-img" src="../../shared_assets/默契幣數量顯示欄.png" alt="默契值"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
         <div class="coin-fallback">
           <span class="cn">128</span><span class="cl">默契值</span>
@@ -602,19 +602,19 @@ body{
         <div class="mp-title">選擇今天的心情</div>
         <div class="mp-row">
           <div class="mp-opt" data-idx="0">
-            <img src="./assets/開心太陽.png" onerror="this.outerHTML='<span style=font-size:1.8rem>☀️</span>'">
+            <img src="../../../圖/天氣/開心太陽.png" onerror="this.outerHTML='<span style=font-size:1.8rem>☀️</span>'">
             <span>開心</span>
           </div>
           <div class="mp-opt" data-idx="1">
-            <img src="./assets/平靜白雲.png" onerror="this.outerHTML='<span style=font-size:1.8rem>⛅</span>'">
+            <img src="../../../圖/天氣/平靜白雲.png" onerror="this.outerHTML='<span style=font-size:1.8rem>⛅</span>'">
             <span>平靜</span>
           </div>
           <div class="mp-opt" data-idx="2">
-            <img src="./assets/憂鬱烏雲.png" onerror="this.outerHTML='<span style=font-size:1.8rem>🌧</span>'">
+            <img src="../../../圖/天氣/憂鬱烏雲.png" onerror="this.outerHTML='<span style=font-size:1.8rem>🌧</span>'">
             <span>憂鬱</span>
           </div>
           <div class="mp-opt" data-idx="3">
-            <img src="./assets/生氣雷雲.png" onerror="this.outerHTML='<span style=font-size:1.8rem>⛈</span>'">
+            <img src="../../../圖/天氣/生氣雷雲.png" onerror="this.outerHTML='<span style=font-size:1.8rem>⛈</span>'">
             <span>生氣</span>
           </div>
         </div>
@@ -632,7 +632,7 @@ body{
       <!-- Whale question trigger -->
       <div class="whale-row">
         <button class="whale-ask-btn" onclick="openWhaleQA()">
-          <img src="./assets/小鯨魚.png" alt="🐋"
+          <img src="../../shared_assets/小鯨魚.png" alt="🐋"
                onerror="this.outerHTML='<span style=font-size:1.5rem>🐋</span>'">
           點擊小鯨魚來一道問題
         </button>
@@ -680,7 +680,7 @@ body{
 
   <!-- 默契繩結增加動畫 -->
   <div id="bond-popup">
-    <img class="bond-knot" src="./assets/默契繩結.png" alt="默契繩結">
+    <img class="bond-knot" src="../../shared_assets/默契繩結.png" alt="默契繩結">
     <div class="bond-gain" id="bond-gain-text">+20</div>
     <div class="bond-label">默契值提升</div>
   </div>
@@ -689,7 +689,7 @@ body{
   <div id="whale-qa-modal" onclick="onQAModalBg(event)">
     <div id="whale-qa-box">
       <div class="wqa-whale-icon">
-        <img src="./assets/小鯨魚.png" alt="🐋">
+        <img src="../../shared_assets/小鯨魚.png" alt="🐋">
       </div>
 
       <!-- 確認畫面 -->
@@ -931,7 +931,7 @@ body{
     moodState[who] = idx;
     const ring = document.getElementById('ring-' + who);
     ring.classList.add('picked');
-    ring.innerHTML = `<img class="mood-img" src="./assets/${m.img}"
+    ring.innerHTML = `<img class="mood-img" src="../../../圖/天氣/${m.img}"
       onerror="this.outerHTML='<span class=mood-emoji>${m.emoji}</span>'">`;
   }
 
