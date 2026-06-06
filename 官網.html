@@ -933,13 +933,15 @@ function closeSoftHook(id){
 }
 
 /* 7. Submit Hook */
+var GAS_URL='https://script.google.com/macros/s/AKfycbxL6Q1IeciIbqERjb_VlUT4TFpvR_Ynwy8VtrY9u-KjO-WWTJEqYF5MwGSBLVQWyPLUNA/exec';
+var MODULE_NAMES={0:'Module01 主畫面',1:'Module02 航海日誌',2:'Module03 地圖與星空',3:'Module04 波音陪伴'};
 function submitHook(id){
   var inp=document.getElementById('hook-email-'+id);
   var btn=inp?inp.nextElementSibling:null;
   if(!inp||!btn)return;
   if(!validEmail(inp.value.trim())){flashBad(inp);return;}
-  console.log('[Hook '+id+']',inp.value.trim());
   setOK(btn,inp,'✓ 已收到！啟航時通知你');
+  fetch(GAS_URL,{method:'POST',body:JSON.stringify({email:inp.value.trim(),source:MODULE_NAMES[id]||'Soft Hook'})});
 }
 
 /* 8. Submit Footer */
@@ -948,8 +950,8 @@ function submitFooter(){
   var btn=document.getElementById('footer-submit-btn');
   if(!inp||!btn)return;
   if(!validEmail(inp.value.trim())){flashBad(inp);return;}
-  console.log('[Footer]',inp.value.trim());
   setOK(btn,inp,'✓ 船票已送出！波音會通知你 🐳');
+  fetch(GAS_URL,{method:'POST',body:JSON.stringify({email:inp.value.trim(),source:'Footer 頁尾'})});
 }
 
 /* helpers */
