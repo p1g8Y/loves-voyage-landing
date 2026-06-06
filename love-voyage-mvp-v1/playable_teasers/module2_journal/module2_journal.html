@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>愛之航 · 航海日誌</title>
+<title>Boing · 航海日誌</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600&family=Playfair+Display:ital,wght@0,500;1,400&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -634,7 +634,7 @@ body{
         <button class="whale-ask-btn" onclick="openWhaleQA()">
           <img src="../../shared_assets/小鯨魚.png" alt="🐋"
                onerror="this.outerHTML='<span style=font-size:1.5rem>🐋</span>'">
-          點擊小鯨魚來一道問題
+          點擊波音來一道問題
         </button>
       </div>
 
@@ -694,7 +694,7 @@ body{
 
       <!-- 確認畫面 -->
       <div id="wqa-confirm">
-        <div class="wqa-label">✦ 小鯨魚想確認一下 ✦</div>
+        <div class="wqa-label">✦ 波音想確認一下 ✦</div>
         <div class="wqa-question" style="font-size:.82rem;font-weight:400;">你今天沒有什麼特別的事情<br>要和對方分享嗎？</div>
         <div class="wqa-btns">
           <button class="wqa-skip" onclick="closeWhaleQA()">我有事要分享</button>
@@ -704,7 +704,7 @@ body{
 
       <!-- 問題畫面 -->
       <div id="wqa-main" style="display:none;width:100%;display:none;flex-direction:column;align-items:center;gap:10px;">
-        <div class="wqa-label">✦ 小鯨魚今日提問 ✦</div>
+        <div class="wqa-label">✦ 波音今日提問 ✦</div>
         <div class="wqa-question" id="wqa-question">今天最感謝對方的一件事是什麼？</div>
         <textarea class="wqa-textarea" id="wqa-answer"
                   placeholder="寫下你的回答…" maxlength="150"></textarea>
@@ -812,7 +812,7 @@ body{
     myAnsEl.readOnly = !isToday;
     myAnsEl.classList.toggle('readonly', !isToday);
 
-    // 歷史頁：隱藏小鯨魚、送出、字數、長按提示；鎖定我的心情圈游標
+    // 歷史頁：隱藏波音、送出、字數、長按提示；鎖定我的心情圈游標
     document.querySelector('.submit-area').style.display  = isToday ? '' : 'none';
     document.querySelector('.whale-row').style.display    = isToday ? '' : 'none';
     document.querySelector('.char-count').style.display   = isToday ? '' : 'none';
