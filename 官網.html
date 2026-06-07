@@ -941,7 +941,7 @@ function submitHook(id){
   if(!inp||!btn)return;
   if(!validEmail(inp.value.trim())){flashBad(inp);return;}
   setOK(btn,inp,'✓ 已收到！啟航時通知你');
-  fetch(GAS_URL,{method:'POST',body:JSON.stringify({email:inp.value.trim(),source:MODULE_NAMES[id]||'Soft Hook'})});
+  fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:inp.value.trim(),source:MODULE_NAMES[id]||'Soft Hook'})}).catch(function(err){console.error('送出失敗',err);});
 }
 
 /* 8. Submit Footer */
@@ -951,7 +951,7 @@ function submitFooter(){
   if(!inp||!btn)return;
   if(!validEmail(inp.value.trim())){flashBad(inp);return;}
   setOK(btn,inp,'✓ 船票已送出！波音會通知你 🐳');
-  fetch(GAS_URL,{method:'POST',body:JSON.stringify({email:inp.value.trim(),source:'Footer 頁尾'})});
+  fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:inp.value.trim(),source:'Footer 頁尾'})}).catch(function(err){console.error('送出失敗',err);});
 }
 
 /* helpers */
